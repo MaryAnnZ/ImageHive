@@ -6,51 +6,66 @@
 #include <opencv2\core.hpp>
 #include <opencv2\highgui.hpp>
 #include <Windows.h>
+#include <shlobj.h>
 #include <cstdio>
+
+
+std::string	BrowseFolder(void)
+{
+	TCHAR path[MAX_PATH];
+	BROWSEINFO bi = { 0 };
+	bi.lpszTitle = ("All Folders Automatically Recursed.");
+	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+
+	if (pidl != 0)
+	{
+		// get the name of the folder and put it in path
+		SHGetPathFromIDList(pidl, path);
+
+		//Set the current directory to path
+		SetCurrentDirectory(path);
+
+
+		// free memory used
+		IMalloc * imalloc = 0;
+		if (SUCCEEDED(SHGetMalloc(&imalloc)))
+		{
+			imalloc->Free(pidl);
+			imalloc->Release();
+		}
+	}
+	return std::string(path);
+}//BROWSE FOLDER
+
 
 int main()
 {
-	OPENFILENAME dialog;
-	TCHAR pathBuffer[660];
+	std::vector<cv::String> filenames;
+	cv::String folder(BrowseFolder());
+	cv::glob(folder, filenames);
+	cv::String ref1 = "png";
+	cv::String ref2 = "jpg";
+	std::vector<cv::Mat> images;
+	for (int i = 0; i < filenames.size(); i++) {
+		cv::String currentString = filenames.at(i);
+		if (0 == currentString.compare(currentString.length() - ref1.length(), ref1.length(), ref1) || 0 == currentString.compare(currentString.length() - ref2.length(), ref1.length(), ref2)) {
+			std::replace(currentString.begin(), currentString.end(), '\\', '/');
+			std::cout << currentString << std::endl;
+		
+			cv::Mat img = cv::imread(currentString);
 
-	ZeroMemory(&dialog, sizeof(dialog));
-	dialog.lStructSize = sizeof(dialog);
-	dialog.hwndOwner = NULL;
-	dialog.lpstrFile = pathBuffer;
-	dialog.lpstrFile[0] = '\0';
-	dialog.nMaxFile = sizeof(pathBuffer);
-	dialog.lpstrFilter = "Image\0*.JPG;*.PNG\0";
-	dialog.nFilterIndex = 1;
-	dialog.lpstrFileTitle = NULL;
-	dialog.nMaxFileTitle = 0;
-	dialog.lpstrInitialDir = NULL;
-	dialog.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-	cv::Mat img;
-	if (GetOpenFileName(&dialog) == TRUE) {
-		if (dialog.lpstrFile == NULL) {
-			return 0;
+			images.push_back(img);
 		}
-		char filePath[660];
-
-
-		int len = MultiByteToWideChar(CP_ACP, 0, dialog.lpstrFile, -1, NULL, 0);
-		wchar_t* file = new wchar_t[len];
-		MultiByteToWideChar(CP_ACP, 0, dialog.lpstrFile, -1, file, len);
-
-		wcstombs(filePath, file, 660);
-
-		img = cv::imread(filePath);
 	}
 
-	//cv::Mat img = cv::imread("myLittlePony.jpg");
-	if (!img.data) {
+	//only test output
+	if (!images.at(1).data) {
 		std::cout << "Where is the image?" << std::endl;
 		getchar();
 	}
 	else {
 		cvNamedWindow("img");
-		cv::imshow("img", img);
+		cv::imshow("img", images.at(1));
 	}
 	cvWaitKey(0);
 
