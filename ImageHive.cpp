@@ -72,19 +72,23 @@ int main()
 			}
 		}
 
-		std::vector<ImageAttribute> imageAttributes;
+		std::vector<ImageAttribute> allImages(images.size());
 		for (int i = 0; i < images.size(); i++) {
-			imageAttributes.push_back(ImageAttribute::ImageAttribute(images.at(i)));
-			imageAttributes.at(i).calcColorHistogram();
-			imageAttributes.at(i).calcHOG();
+			ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i));
+			allImages[i] = tmp;
+			allImages.at(i).calcColorHistogram();
+			allImages.at(i).calcHOG();
+			
 		}
+		
 
 		doVoronoi(images);
 		
 		cvWaitKey(0);
-	}
+		
+	}  
 
-    return 0;
+	return 0;
 }
 
 

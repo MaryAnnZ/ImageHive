@@ -10,6 +10,10 @@ ImageAttribute::ImageAttribute(cv::Mat img)
 	image = img;
 }
 
+ImageAttribute::ImageAttribute()
+{
+}
+
 ImageAttribute::~ImageAttribute()
 {
 }

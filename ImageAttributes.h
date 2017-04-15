@@ -6,6 +6,7 @@ class ImageAttribute
 {
 public:
 	ImageAttribute(cv::Mat img);
+	ImageAttribute();
 	~ImageAttribute();
 
 	void calcColorHistogram();
