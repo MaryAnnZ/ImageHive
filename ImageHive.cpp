@@ -56,8 +56,7 @@ int main()
 
 	if (filenames.size() >= 4) {
 
-		std::vector<cv::Mat> images(filenames.size());
-		int imageIndex = 0;
+		std::vector<cv::Mat> images;
 
 		for (int i = 0; i < filenames.size(); i++) {
 			cv::String currentString = filenames.at(i);
@@ -68,8 +67,7 @@ int main()
 
 				Mat img = cv::imread(currentString);
 
-				images[imageIndex] = img;
-				imageIndex++;
+				images.push_back(img);
 			}
 		}
 
@@ -122,7 +120,7 @@ void doVoronoi(std::vector<Mat> images) {
 				resize(images[imageIndex], resizedImages[imageIndex], 
 					   Size(oldSize.width*heightRatio, cellHeight - 1));
 			}
-			
+			std::cout << imageIndex << std::endl;
 			cluster.at(row).at(col) = resizedImages[imageIndex];
 
 			Size size = cluster.at(row).at(col).size();
