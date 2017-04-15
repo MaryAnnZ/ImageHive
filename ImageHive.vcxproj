@@ -131,12 +131,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cluster.cpp" />
+    <ClCompile Include="DataLoader.cpp" />
     <ClCompile Include="ImageAttributes.cpp" />
     <ClCompile Include="ImageHive.cpp" />
+    <ClCompile Include="ResultImage.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cluster.h" />
+    <ClInclude Include="DataLoader.h" />
     <ClInclude Include="ImageAttributes.h" />
+    <ClInclude Include="ResultImage.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

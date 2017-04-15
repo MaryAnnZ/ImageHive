@@ -8,6 +8,7 @@
 ImageAttribute::ImageAttribute(cv::Mat img)
 {
 	image = img;
+	resizedImage = image;
 }
 
 ImageAttribute::ImageAttribute()
@@ -16,6 +17,14 @@ ImageAttribute::ImageAttribute()
 
 ImageAttribute::~ImageAttribute()
 {
+}
+
+cv::Mat ImageAttribute::resize(cv::Size newSize)
+{
+	cv::Mat tmp = image;
+	cv::resize(image, resizedImage, newSize);
+	image = tmp;
+	return resizedImage;
 }
 
 void ImageAttribute::calcColorHistogram()
@@ -64,6 +73,7 @@ void ImageAttribute::calcHOG()
 	des.compute(grayScale, valuesHOG, cv::Size(0, 0), cv::Size(0, 0), locationsHOG);
 	//writeHOG();
 }
+
 
 void ImageAttribute::outputHistogram()
 {

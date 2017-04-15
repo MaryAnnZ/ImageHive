@@ -12,13 +12,21 @@ public:
 	void calcColorHistogram();
 	void calcHOG();
 	cv::Mat getImage() { return image; }
+	cv::Mat getResizedImage(){return resizedImage;};
+
+	cv::Mat resize(cv::Size newSize);
+	cv::Size getOriginSize() { return image.size(); };
+
 private:
 	cv::Mat image;
+	cv::Mat resizedImage;
+
 	std::vector<cv::Mat> bgrHist;
 	std::vector<float> valuesHOG;
 	std::vector<cv::Point> locationsHOG;
 
 	void outputHistogram();
 	void writeHOG();
+
 };
 
