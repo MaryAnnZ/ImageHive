@@ -9,6 +9,7 @@
 #include <Windows.h>
 #include <shlobj.h>
 #include <cstdio>
+#include "ImageAttributes.h"
 
 using namespace cv;
 
@@ -71,7 +72,13 @@ int main()
 			}
 		}
 
-		
+		std::vector<ImageAttribute> imageAttributes;
+		for (int i = 0; i < images.size(); i++) {
+			imageAttributes.push_back(ImageAttribute::ImageAttribute(images.at(i)));
+			imageAttributes.at(i).calcColorHistogram();
+			imageAttributes.at(i).calcHOG();
+		}
+
 		doVoronoi(images);
 		
 		cvWaitKey(0);
