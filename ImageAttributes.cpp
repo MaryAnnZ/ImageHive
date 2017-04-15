@@ -23,7 +23,6 @@ cv::Mat ImageAttribute::resize(cv::Size newSize)
 {
 	cv::Mat tmp = image;
 	cv::resize(image, resizedImage, newSize);
-	image = tmp;
 	return resizedImage;
 }
 

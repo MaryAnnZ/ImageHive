@@ -39,6 +39,8 @@ std::string DataLoader::browseFolder()
 std::vector<cv::Mat> DataLoader::loadDataset()
 {
 	std::vector<cv::String> filenames;
+	std::vector<cv::String> tmpFilePaths;
+
 	cv::String folder(DataLoader::browseFolder());
 	cv::glob(folder, filenames);
 	cv::String ref1 = "png";
@@ -56,6 +58,7 @@ std::vector<cv::Mat> DataLoader::loadDataset()
 				std::cout << currentString << std::endl;
 
 				cv::Mat img = cv::imread(currentString);
+				tmpFilePaths.push_back(currentString);
 
 				images.push_back(img);
 			}
@@ -63,6 +66,8 @@ std::vector<cv::Mat> DataLoader::loadDataset()
 
 		
 	}
+
+	filePaths = tmpFilePaths;
 	return(images);
 
 }

@@ -13,10 +13,11 @@ public:
 	DataLoader();
 	~DataLoader();
 
-	static std::vector<cv::Mat> loadDataset();
+	std::vector<cv::String> getFilePaths() { return filePaths; };
+	std::vector<cv::Mat> loadDataset();
 
 private:
-	static std::string browseFolder();
-
+	std::string browseFolder();
+	std::vector<cv::String> filePaths;
 };
 

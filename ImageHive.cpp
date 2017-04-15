@@ -25,51 +25,33 @@ void draw_voronoi(Mat&, Subdiv2D&);
 
 int main()
 {
-	std::vector<cv::String> filenames;
-	std::vector<cv::String> imageFiles;
-	cv::String folder(BrowseFolder());
-	cv::glob(folder, filenames);
-	cv::String ref1 = "png";
-	cv::String ref2 = "jpg";
-	std::vector<cv::Mat> images = DataLoader::loadDataset();
+	DataLoader loader = DataLoader();
+	std::vector<cv::Mat> images = loader.loadDataset();
+	std::vector<cv::String> filePaths = loader.getFilePaths();
 
 	int resultHeight = 400;
 	int resultWidth = 600;
 
 	ResultImage result = ResultImage(400, 600);
 
-		for (int i = 0; i < filenames.size(); i++) {
-			cv::String currentString = filenames.at(i);
-
-			if (0 == currentString.compare(currentString.length() - ref1.length(), ref1.length(), ref1) || 0 == currentString.compare(currentString.length() - ref2.length(), ref1.length(), ref2)) {
-				std::replace(currentString.begin(), currentString.end(), '\\', '/');
-				std::cout << currentString << std::endl;
-
-				Mat img = cv::imread(currentString);
-				imageFiles.push_back(currentString);
-
-				images.push_back(img);
-			}
-		}
-
 	//color and edge histogram
 	std::vector<ImageAttribute> allImages(images.size());
-		for (int i = 0; i < images.size(); i++) {
-			ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i));
-			allImages[i] = tmp;
-			allImages.at(i).calcColorHistogram();
-			//allImages.at(i).calcHOG();
-			
+	for (int i = 0; i < images.size(); i++) {
+		ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i));
+		allImages[i] = tmp;
+		allImages.at(i).calcColorHistogram();
+		allImages.at(i).calcHOG();
 	}
-		for (int i = 0; i < allImages.size(); i++) {
-			ImageAttribute currentIA = allImages.at(i);
-			std::cout << "comparing " << imageFiles.at(i) << std::endl;;
+
+	for (int i = 0; i < allImages.size(); i++) {
+			ImageAttribute currentIA = allImages[i];
+			std::cout << "comparing " << filePaths.at(i) << std::endl;;
 			for (int j = 0; j < allImages.size(); j++) {
-				std::cout << " with " << imageFiles.at(j) << std::endl;
+				std::cout << " with " << filePaths.at(j) << std::endl;
 				std::cout << currentIA.compareHOGvalue(allImages.at(j).getHOGvalues()) << std::endl;
 			}
 			std::cout << "*****************"  << std::endl;
-		}
+	}
 
 	std::vector<Cluster> allClusters = createClusters(allImages,result);
 
@@ -99,7 +81,6 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 
 	int cellWidth = result.getWidth() / colCount;
 
-	Mat result(resultHeight, resultWidth, CV_8UC3, double(0));
 	int lastHeightResult = 0;
 	int lastWidthResult = 0;
 
