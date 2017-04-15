@@ -49,6 +49,7 @@ int main()
 			for (int j = 0; j < allImages.size(); j++) {
 				std::cout << " with " << filePaths.at(j) << std::endl;
 				std::cout << currentIA.compareHOGvalue(allImages.at(j).getHOGvalues()) << std::endl;
+				std::cout << currentIA.compareHist(allImages.at(j).getColorHis()) << std::endl;
 			}
 			std::cout << "*****************"  << std::endl;
 	}

@@ -19,6 +19,8 @@ public:
 	cv::Mat resize(cv::Size newSize);
 	cv::Size getOriginSize() { return image.size(); };
 
+	std::vector<cv::Mat> getColorHis() { return bgrHist; }
+	float compareHist(std::vector<cv::Mat> otherHistograms);
 private:
 	cv::Mat image;
 	cv::Mat resizedImage;

@@ -95,6 +95,19 @@ float ImageAttribute::compareHOGvalue(std::vector<float> otherValues)
 	return rrr;
 }
 
+float ImageAttribute::compareHist(std::vector<cv::Mat> otherHistograms)
+{
+	if (bgrHist.size() == otherHistograms.size()) {
+		float correlation = 0.0;
+		for (int i = 0; i < bgrHist.size(); i++) {
+			correlation += cv::compareHist(bgrHist.at(i), otherHistograms.at(i), CV_COMP_CORREL);
+		}
+		return correlation / bgrHist.size();
+	}
+	else {
+		return -1;
+	}
+}
 
 void ImageAttribute::outputHistogram()
 {
