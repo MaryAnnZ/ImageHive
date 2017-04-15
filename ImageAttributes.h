@@ -11,7 +11,9 @@ public:
 
 	void calcColorHistogram();
 	void calcHOG();
+	float compareHOGvalue(std::vector<float> otherValues);
 	cv::Mat getImage() { return image; }
+	std::vector<float> getHOGvalues() {return valuesHOG;}
 private:
 	cv::Mat image;
 	std::vector<cv::Mat> bgrHist;
@@ -19,6 +21,5 @@ private:
 	std::vector<cv::Point> locationsHOG;
 
 	void outputHistogram();
-	void writeHOG();
 };
 

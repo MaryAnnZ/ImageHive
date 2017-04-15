@@ -50,6 +50,7 @@ std::string	BrowseFolder(void)
 int main()
 {
 	std::vector<cv::String> filenames;
+	std::vector<cv::String> imageFiles;
 	cv::String folder(BrowseFolder());
 	cv::glob(folder, filenames);
 	cv::String ref1 = "png";
@@ -67,6 +68,7 @@ int main()
 				std::cout << currentString << std::endl;
 
 				Mat img = cv::imread(currentString);
+				imageFiles.push_back(currentString);
 
 				images.push_back(img);
 			}
@@ -80,7 +82,15 @@ int main()
 			allImages.at(i).calcHOG();
 			
 		}
-		
+		for (int i = 0; i < allImages.size(); i++) {
+			ImageAttribute currentIA = allImages.at(i);
+			std::cout << "comparing " << imageFiles.at(i) << std::endl;;
+			for (int j = 0; j < allImages.size(); j++) {
+				std::cout << " with " << imageFiles.at(j) << std::endl;
+				std::cout << currentIA.compareHOGvalue(allImages.at(j).getHOGvalues()) << std::endl;
+			}
+			std::cout << "*****************"  << std::endl;
+		}
 
 		doVoronoi(images);
 		
@@ -113,7 +123,7 @@ void doVoronoi(std::vector<Mat> images) {
 
 	int cellWidth = resultWidth / colCount;
 
-	Mat result(resultHeight, resultWidth, CV_8UC3);
+	Mat result(resultHeight, resultWidth, CV_8UC3, double(0));
 	int lastHeightResult = 1;
 	int lastWidthResult = 1;
 
@@ -131,7 +141,6 @@ void doVoronoi(std::vector<Mat> images) {
 				resize(images[imageIndex], resizedImages[imageIndex], 
 					   Size(oldSize.width*heightRatio, cellHeight - 1));
 			}
-			std::cout << imageIndex << std::endl;
 			cluster.at(row).at(col) = resizedImages[imageIndex];
 
 			Size size = cluster.at(row).at(col).size();
