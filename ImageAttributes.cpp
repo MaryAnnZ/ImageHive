@@ -63,15 +63,37 @@ void ImageAttribute::calcColorHistogram()
 
 void ImageAttribute::calcHOG()
 {
-	//I dont know if we need to resize the image or not...
-	//cv::Mat resized;
-	//cv::resize(image, resized, cv::Size(64, 48));
+	cv::Mat resized;
+	cv::resize(image, resized, cv::Size(64, 128));//64, 48
 	cv::Mat grayScale;
-	cv::cvtColor(image, grayScale, CV_BGR2GRAY);
+	cv::cvtColor(resized, grayScale, CV_BGR2GRAY);
 
-	cv::HOGDescriptor des(cv::Size(32, 32), cv::Size(16, 16), cv::Size(8, 8), cv::Size(4, 4), 9);
+	cv::HOGDescriptor des(cv::Size(64, 8), cv::Size(8, 8), cv::Size(4, 4), cv::Size(4, 4), 9);
+	//cv::HOGDescriptor des();
 	des.compute(grayScale, valuesHOG, cv::Size(0, 0), cv::Size(0, 0), locationsHOG);
-	//writeHOG();
+}
+
+float ImageAttribute::compareHOGvalue(std::vector<float> otherValues)
+{
+	//copy vector to mat  
+	//create Mat  
+	cv::Mat A(valuesHOG.size(), 1, CV_32FC1);
+	//copy vector to mat  
+	memcpy(A.data, valuesHOG.data(), valuesHOG.size() * sizeof(float));
+	//create Mat  
+	cv::Mat B(otherValues.size(), 1, CV_32FC1);
+	//copy vector to mat  
+	memcpy(B.data, otherValues.data(), otherValues.size() * sizeof(float));
+
+
+	/////////////////////////
+	//sum( sqrt( (A.-B)^2 ) )
+	cv::Mat C = A - B;
+	C = C.mul(C);
+	cv::sqrt(C, C);
+	cv::Scalar rr = cv::sum(C);
+	float rrr = rr(0);
+	return rrr;
 }
 
 
@@ -103,21 +125,3 @@ void ImageAttribute::outputHistogram()
 	cv::imshow("calcHist", histImage);
 }
 
-void ImageAttribute::writeHOG()
-{
-	//char fileName[100] = "HOG.xml";
-	//cv::FileStorage hogXML(fileName, cv::FileStorage::WRITE);
-
-	//int row = valuesHOG.size();
-	//int col = valuesHOG.size();
-	//std::cout << "col: " << col << ", row: " << row << std::endl;
-	//cv::Mat mat(row, col, CV_32F);
-	//for (int i = 0; i < row; i++) {
-	//	memcpy(&(mat.data[col * i * sizeof(float)]), valuesHOG.at(i).data(), col * sizeof(float));
-	//}
-	//std::cout << "write" << std::endl;
-	//cv::write(hogXML, "Descriptor", mat);
-	//std::cout << "written" << std::endl;
-	//hogXML.release();
-	//std::cout << "END" << std::endl;
-}

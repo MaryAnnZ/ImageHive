@@ -11,7 +11,9 @@ public:
 
 	void calcColorHistogram();
 	void calcHOG();
+	float compareHOGvalue(std::vector<float> otherValues);
 	cv::Mat getImage() { return image; }
+	std::vector<float> getHOGvalues() {return valuesHOG;}
 	cv::Mat getResizedImage(){return resizedImage;};
 
 	cv::Mat resize(cv::Size newSize);
@@ -26,7 +28,6 @@ private:
 	std::vector<cv::Point> locationsHOG;
 
 	void outputHistogram();
-	void writeHOG();
 
 };
 
