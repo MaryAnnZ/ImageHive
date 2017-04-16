@@ -12,6 +12,7 @@
 #include "DataLoader.h"
 #include "Cluster.h"
 #include "ResultImage.h"
+#include "KNN.h"
 
 using namespace cv;
 
@@ -29,6 +30,10 @@ int main()
 	std::vector<cv::Mat> images = loader.loadDataset();
 	std::vector<cv::String> filePaths = loader.getFilePaths();
 
+	if (images.empty()) {
+		return 0;
+	}
+
 	int resultHeight = 400;
 	int resultWidth = 600;
 
@@ -43,13 +48,35 @@ int main()
 		allImages.at(i).calcHOG();
 	}
 
+	KNN knn = KNN();
+	knn.createVertices(allImages);
 	for (int i = 0; i < allImages.size(); i++) {
 			ImageAttribute currentIA = allImages[i];
 			std::cout << "comparing " << filePaths.at(i) << std::endl;;
+			std::vector<float> hogCorr;
+			float maxHog = -1;
+			std::vector<float> histCorr;
 			for (int j = 0; j < allImages.size(); j++) {
+				//small corr; big no corr -->normalize
+				float corrHog = currentIA.compareHOGvalue(allImages.at(j).getHOGvalues());
+				// 1 -> corr; 0 -> no corr;
+				float corrHist = currentIA.compareHist(allImages.at(j).getColorHis());
 				std::cout << " with " << filePaths.at(j) << std::endl;
-				std::cout << currentIA.compareHOGvalue(allImages.at(j).getHOGvalues()) << std::endl;
-				std::cout << currentIA.compareHist(allImages.at(j).getColorHis()) << std::endl;
+				std::cout << corrHog << std::endl;
+				std::cout << corrHist << std::endl;
+				hogCorr.push_back(corrHog);
+				if (corrHog > maxHog) {
+					maxHog = corrHog;
+				}
+				histCorr.push_back(1 - corrHist);
+
+			}
+			for (int k = 0; k < histCorr.size(); k++) {
+				//normalize HOG
+				float hogValue = hogCorr.at(k) / maxHog;
+				if (i != k) { //no edges with the same start and end vertex
+					knn.createEdge(i, k, hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
+				}
 			}
 			std::cout << "*****************"  << std::endl;
 	}
