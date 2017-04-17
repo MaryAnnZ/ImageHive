@@ -12,7 +12,7 @@
 #include "DataLoader.h"
 #include "Cluster.h"
 #include "ResultImage.h"
-#include "KNN.h"
+#include "MyGraph.h"
 
 using namespace cv;
 
@@ -40,19 +40,18 @@ int main()
 	ResultImage result = ResultImage(400, 600);
 
 	//color and edge histogram
-	std::vector<ImageAttribute> allImages(images.size());
+	std::vector<ImageAttribute> allImages;
+	MyGraph graph = MyGraph();
 	for (int i = 0; i < images.size(); i++) {
-		ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i));
-		allImages[i] = tmp;
+		allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i));		
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
+		graph.createVertex(allImages.at(i));
 	}
-
-	KNN knn = KNN();
-	knn.createVertices(allImages);
+		
 	for (int i = 0; i < allImages.size(); i++) {
 			ImageAttribute currentIA = allImages[i];
-			std::cout << "comparing " << filePaths.at(i) << std::endl;;
+			
 			std::vector<float> hogCorr;
 			float maxHog = -1;
 			std::vector<float> histCorr;
@@ -61,9 +60,6 @@ int main()
 				float corrHog = currentIA.compareHOGvalue(allImages.at(j).getHOGvalues());
 				// 1 -> corr; 0 -> no corr;
 				float corrHist = currentIA.compareHist(allImages.at(j).getColorHis());
-				std::cout << " with " << filePaths.at(j) << std::endl;
-				std::cout << corrHog << std::endl;
-				std::cout << corrHist << std::endl;
 				hogCorr.push_back(corrHog);
 				if (corrHog > maxHog) {
 					maxHog = corrHog;
@@ -71,11 +67,14 @@ int main()
 				histCorr.push_back(1 - corrHist);
 
 			}
+			std::cout << "comparing " << filePaths.at(i) << std::endl;
 			for (int k = 0; k < histCorr.size(); k++) {
 				//normalize HOG
 				float hogValue = hogCorr.at(k) / maxHog;
 				if (i != k) { //no edges with the same start and end vertex
-					knn.createEdge(i, k, hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
+					graph.createEdge(allImages.at(i), allImages.at(k), hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
+					std::cout << " with " << filePaths.at(k) << std::endl;
+					std::cout << "value: " << hogValue + histCorr.at(k) << std::endl;
 				}
 			}
 			std::cout << "*****************"  << std::endl;

@@ -5,10 +5,11 @@
 #include <opencv2\objdetect\objdetect.hpp>
 #include <stdio.h>
 
-ImageAttribute::ImageAttribute(cv::Mat img)
+ImageAttribute::ImageAttribute(cv::Mat img, int idVal)
 {
 	image = img;
 	resizedImage = image;
+	id = idVal;
 }
 
 ImageAttribute::ImageAttribute()
@@ -107,6 +108,11 @@ float ImageAttribute::compareHist(std::vector<cv::Mat> otherHistograms)
 	else {
 		return -1;
 	}
+}
+
+bool ImageAttribute::compareImage(ImageAttribute image)
+{
+	return id == image.getId();
 }
 
 void ImageAttribute::outputHistogram()

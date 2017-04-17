@@ -5,7 +5,7 @@
 class ImageAttribute
 {
 public:
-	ImageAttribute(cv::Mat img);
+	ImageAttribute(cv::Mat img, int idVal);
 	ImageAttribute();
 	~ImageAttribute();
 
@@ -21,8 +21,13 @@ public:
 
 	std::vector<cv::Mat> getColorHis() { return bgrHist; }
 	float compareHist(std::vector<cv::Mat> otherHistograms);
+
+	int getId() { return id; }
+	bool compareImage(ImageAttribute image);
+
 private:
 	cv::Mat image;
+	int id;
 	cv::Mat resizedImage;
 
 	std::vector<cv::Mat> bgrHist;

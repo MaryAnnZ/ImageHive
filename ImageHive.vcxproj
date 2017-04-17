@@ -136,6 +136,8 @@
     <ClCompile Include="ImageAttributes.cpp" />
     <ClCompile Include="ImageHive.cpp" />
     <ClCompile Include="KNN.cpp" />
+    <ClCompile Include="MyGraph.cpp" />
+    <ClCompile Include="MyVertex.cpp" />
     <ClCompile Include="ResultImage.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
@@ -144,6 +146,8 @@
     <ClInclude Include="DataLoader.h" />
     <ClInclude Include="ImageAttributes.h" />
     <ClInclude Include="KNN.h" />
+    <ClInclude Include="MyGraph.h" />
+    <ClInclude Include="MyVertex.h" />
     <ClInclude Include="ResultImage.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
