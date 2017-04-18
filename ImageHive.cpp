@@ -46,7 +46,7 @@ int main()
 		allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i));		
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
-		graph.createVertex(allImages.at(i));
+		//graph.createVertex(allImages.at(i));
 	}
 		
 	for (int i = 0; i < allImages.size(); i++) {

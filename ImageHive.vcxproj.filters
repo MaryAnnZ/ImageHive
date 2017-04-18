@@ -33,13 +33,10 @@
     <ClCompile Include="DataLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="KNN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MyGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyVertex.cpp">
+    <ClCompile Include="MyEdge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,13 +59,10 @@
     <ClInclude Include="DataLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KNN.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MyGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MyVertex.h">
+    <ClInclude Include="MyEdge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

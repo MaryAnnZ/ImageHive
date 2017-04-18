@@ -1,5 +1,5 @@
 #include "MyGraph.h"
-
+#include <iostream>
 
 
 MyGraph::MyGraph()
@@ -11,25 +11,23 @@ MyGraph::~MyGraph()
 {
 }
 
-void MyGraph::createVertex(ImageAttribute vertex)
-{
-	vertices.push_back(MyVertex(vertex));
-}
-
 void MyGraph::createEdge(ImageAttribute start, ImageAttribute end, float weight)
 {
-	int startIndex = -1;
-	int endIndex = -1;
-	for (int i = 0; i < vertices.size(); i++) {
-		if (start.compareImage(vertices.at(i).getImage())) {
-			startIndex = i;
-		}
-		else if (end.compareImage(vertices.at(i).getImage())) {
-			endIndex = i;
-		}
-		if (startIndex != -1 && endIndex != -1) {
-			break;
+	edges.push_back(MyEdge(start, end, weight));
+	std::cout << "creating edge; start: " << start.getId() << " end: " << end.getId() << " weight: " << weight << std::endl;
+}
+
+void MyGraph::doClustering(int amountVertices)
+{
+	while (visitedVertices.empty() || visitedVertices.size() != amountVertices)
+	{
+		float minWeight = edges.at(0).getWeight();
+		MyEdge tmp = edges.at(0);
+		for (int i = 1; i < edges.size(); i++) {
+			if (edges.at(i).getWeight() < minWeight) {
+				tmp = edges.at(i);
+				minWeight = tmp.getWeight();
+			}
 		}
 	}
-	vertices.at(startIndex).addEdge(vertices.at(endIndex), weight);
 }

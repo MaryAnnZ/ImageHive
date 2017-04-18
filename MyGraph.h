@@ -1,6 +1,6 @@
 #pragma once
 #include "ImageAttributes.h"
-#include "MyVertex.h"
+#include "MyEdge.h"
 
 class MyGraph
 {
@@ -8,11 +8,11 @@ public:
 	MyGraph();
 	~MyGraph();
 
-	void createVertex(ImageAttribute vertex);
 	void createEdge(ImageAttribute start, ImageAttribute end, float weight);
-
+	void doClustering(int amountVertices);
 private:
-	std::vector<MyVertex> vertices;
+	std::vector<MyEdge> edges;
+	std::vector<ImageAttribute> visitedVertices;
 
 
 };
