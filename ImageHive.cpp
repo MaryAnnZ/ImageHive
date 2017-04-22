@@ -43,7 +43,7 @@ int main()
 	std::vector<ImageAttribute> allImages;
 	MyGraph graph = MyGraph();
 	for (int i = 0; i < images.size(); i++) {
-		allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i));		
+		allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i, filePaths.at(i)));		
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
 		//graph.createVertex(allImages.at(i));
@@ -79,7 +79,7 @@ int main()
 			}
 			std::cout << "*****************"  << std::endl;
 	}
-
+	graph.doClustering(allImages.size());
 	std::vector<Cluster> allClusters = createClusters(allImages,result);
 
 	doVoronoi(allClusters,result);

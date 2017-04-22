@@ -5,7 +5,7 @@
 class ImageAttribute
 {
 public:
-	ImageAttribute(cv::Mat img, int idVal);
+	ImageAttribute(cv::Mat img, int idVal, std::string path);
 	ImageAttribute();
 	~ImageAttribute();
 
@@ -25,6 +25,8 @@ public:
 	int getId() { return id; }
 	bool compareImage(ImageAttribute image);
 
+	std::string getPath() { return filePath; }
+
 private:
 	cv::Mat image;
 	int id;
@@ -35,6 +37,7 @@ private:
 	std::vector<cv::Point> locationsHOG;
 
 	void outputHistogram();
+	std::string filePath;
 
 };
 
