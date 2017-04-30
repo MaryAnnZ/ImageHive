@@ -17,6 +17,7 @@
 #include "MyGraph.h"
 
 using namespace cv;
+using namespace std;
 
 //voronoi methods
 std::vector<Cluster> createClusters(std::vector<ImageAttribute>, ResultImage);

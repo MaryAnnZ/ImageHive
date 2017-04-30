@@ -1,6 +1,7 @@
 #pragma once
 #include "ImageAttributes.h"
 #include "MyEdge.h"
+#include <map>
 
 class MyGraph
 {

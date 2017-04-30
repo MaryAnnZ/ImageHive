@@ -43,15 +43,15 @@ std::vector<cv::Mat> DataLoader::loadDataset()
 
 	cv::String folder(DataLoader::browseFolder());
 	cv::glob(folder, filenames);
-	cv::String ref1 = "png";
-	cv::String ref2 = "jpg";
+	std::string ref1 = "png";
+	std::string ref2 = "jpg";
 
 	std::vector<cv::Mat> images;
 
 	if (filenames.size() >= 4) {
 
 		for (int i = 0; i < filenames.size(); i++) {
-			cv::String currentString = filenames.at(i);
+			std::string currentString = filenames.at(i);
 
 			if (0 == currentString.compare(currentString.length() - ref1.length(), ref1.length(), ref1) || 0 == currentString.compare(currentString.length() - ref2.length(), ref1.length(), ref2)) {
 				std::replace(currentString.begin(), currentString.end(), '\\', '/');
