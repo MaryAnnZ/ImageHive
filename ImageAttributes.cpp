@@ -4,6 +4,7 @@
 #include <iostream>
 #include <opencv2\objdetect\objdetect.hpp>
 #include <stdio.h>
+#include <opencv2\saliency.hpp>
 
 ImageAttribute::ImageAttribute(cv::Mat img, int idVal, std::string path)
 {
@@ -114,6 +115,53 @@ float ImageAttribute::compareHist(std::vector<cv::Mat> otherHistograms)
 bool ImageAttribute::compareImage(ImageAttribute image)
 {
 	return id == image.getId();
+}
+
+void ImageAttribute::calculateObjectness()
+{
+	if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
+		cv::Ptr<cv::saliency::ObjectnessBING> objectnessBing = cv::makePtr<cv::saliency::ObjectnessBING>();
+		objectnessBing->setTrainingPath("ObjectnessTrainedModel/");
+		objectnessBing->setBBResDir("ObjectnessTrainedModel/Results");
+		//image.convertTo(image, CV_32FC);
+		if (image.type() == CV_32F && image.isContinuous()) {
+			if (objectnessBing->computeSaliency(image, objectnessBoundingBox)) {
+				objectnessValue = objectnessBing->getobjectnessValues();
+
+				if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
+					cv::Mat clone = image.clone();
+					cv::Vec4i bb = objectnessBoundingBox[0];
+					printf("index=%d, value=%f\n", 0, objectnessValue[0]);
+					cv::rectangle(clone, cv::Point(bb[0], bb[1]), cv::Point(bb[2], bb[3]), cv::Scalar(0, 0, 255), 4);
+
+					char label[256];
+					sprintf(label, "#%d", 0 + 1);
+					cv::putText(clone, label, cv::Point(bb[0], bb[1] + 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 3);
+
+					char filename[256];
+					sprintf(filename, "bing_%05d.jpg", 0);
+					imwrite(filename, clone);
+				}
+				else {
+					std::cout << "1 Objectness does not work by " << filePath << std::endl;
+					std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+				}
+			}
+			else {
+				std::cout << "2 Objectness does not work by " << filePath << std::endl;
+				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+
+			}
+		}
+		else {
+			std::cout << "3 Objectness does not work by " << filePath << std::endl;
+			std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " << image.type() << "		" << image.isContinuous() << std::endl;
+			if (image.type() != CV_32F) {
+				std::cout << "still doesnt work " << CV_32F << std::endl;
+			}
+
+		}
+	}
 }
 
 void ImageAttribute::outputHistogram()

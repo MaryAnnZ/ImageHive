@@ -57,7 +57,7 @@ int main()
 		allImages[i] = tmp;
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
-		//graph.createVertex(allImages.at(i));
+		allImages.at(i).calculateObjectness();
 	}
 		
 	for (int i = 0; i < allImages.size(); i++) {

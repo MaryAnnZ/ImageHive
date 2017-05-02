@@ -27,6 +27,8 @@ public:
 
 	std::string getPath() { return filePath; }
 
+	void calculateObjectness();
+
 private:
 	cv::Mat image;
 	int id;
@@ -39,6 +41,7 @@ private:
 	void outputHistogram();
 	std::string filePath;
 
-	
+	std::vector<cv::Vec4i> objectnessBoundingBox;
+	std::vector<float> objectnessValue;
 };
 
