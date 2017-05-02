@@ -5,11 +5,12 @@
 #include <opencv2\objdetect\objdetect.hpp>
 #include <stdio.h>
 
-ImageAttribute::ImageAttribute(cv::Mat img, int idVal)
+ImageAttribute::ImageAttribute(cv::Mat img, int idVal, std::string path)
 {
 	image = img;
 	resizedImage = image;
 	id = idVal;
+	filePath = path;
 }
 
 ImageAttribute::ImageAttribute()
