@@ -3,7 +3,9 @@
 #include "stdafx.h"
 #include <iostream>
 #include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
+#include "opencv2\features2d\features2d.hpp"
+#include "opencv2\nonfree\features2d.hpp"
+#include <opencv\highgui.h>
 #include <opencv2\imgproc\imgproc.hpp>
 #include <Windows.h>
 #include <shlobj.h>
@@ -23,6 +25,12 @@ void draw_point(Mat&, Point2f, Scalar);
 void draw_delaunay(Mat&, Subdiv2D&, Scalar);
 void draw_voronoi(Mat&, Subdiv2D&);
 
+//col,row
+std::map<int, std::vector<int>> gridLayout = { { 1,{ 1,1 } },{ 2,{ 2,1 } },{ 3,{ 2,2 } },
+{ 4,{ 2,2 } },{ 5,{ 3,2 } },{ 6,{ 3,2 } },
+{ 7,{ 3,3 } },{ 8,{ 3,3 } },{ 9,{ 3,3 } },
+{ 10,{ 4,3 } },{ 11,{ 4,3 } },{ 12,{ 4,3 } } };
+
 
 int main()
 {
@@ -37,13 +45,14 @@ int main()
 	int resultHeight = 400;
 	int resultWidth = 600;
 
-	ResultImage result = ResultImage(400, 600);
+	ResultImage result = ResultImage(600, 400);
 
 	//color and edge histogram
-	std::vector<ImageAttribute> allImages;
+	std::vector<ImageAttribute> allImages(images.size());
 	MyGraph graph = MyGraph();
 	for (int i = 0; i < images.size(); i++) {
-		allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i));		
+		ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i),i);
+		allImages[i] = tmp;
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
 		//graph.createVertex(allImages.at(i));
@@ -97,8 +106,10 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 	int imageIndex = 0;
 	bool even = (int)allMiddleImages.size() % 2 == 0;
 
-	int colCount = (int)allMiddleImages.size() / 2;
-	int rowCount = even ? allMiddleImages.size() / colCount : (int)(allMiddleImages.size() / colCount) + 1;
+	std::vector<int> colRowLayout = gridLayout[allMiddleImages.size()];
+	int colCount = colRowLayout[0];
+	int rowCount = colRowLayout[1];
+	int lastColCount = colCount - ((colCount*rowCount) - allMiddleImages.size());
 
 	int cellHeight = result.getHeight() / rowCount;
 
@@ -107,6 +118,7 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 	cv::Mat tmpResult = cv::Mat(result.getHeight(), result.getWidth(), CV_8UC3);
 
 	int cellWidth = result.getWidth() / colCount;
+	int lastCellWidth = result.getWidth() / lastColCount;
 
 	int lastHeightResult = 0;
 	int lastWidthResult = 0;
@@ -115,14 +127,19 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 		for (int col = 0;col < colCount && imageIndex + 1 <= (allMiddleImages.size());col++) {
 			Size oldSize = allMiddleImages[imageIndex].getOriginSize();
 			cv::Mat resizedImage;
+			int currentCellWidth = cellWidth;
+			if (row == rowCount - 1) {
+				//last row, split different!
+				currentCellWidth = lastCellWidth;
+			}
 
 			if (oldSize.width >= oldSize.height) {
-				float widthRatio = (float)cellWidth / (float)oldSize.width;
-				resizedImage = allMiddleImages[imageIndex].resize(Size(cellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
+				float widthRatio = (float)currentCellWidth / (float)oldSize.width;
+				resizedImage = allMiddleImages[imageIndex].resize(Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
 			}
 			else {
 				float heightRatio = (float)cellHeight / (float)oldSize.height;
-				resizedImage = allMiddleImages[imageIndex].resize(Size(min(cellWidth, oldSize.width*heightRatio), cellHeight - 1));
+				resizedImage = allMiddleImages[imageIndex].resize(Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
 			}
 
 			canvasCluster.at(row).at(col) = resizedImage;
@@ -132,10 +149,10 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 			canvasCluster.at(row).at(col).copyTo(tmpResult(Rect(lastWidthResult, lastHeightResult, size.width, size.height)));
 
 
-			cv::Point2f pos = cv::Point2f(lastWidthResult + (cellWidth / 2), lastHeightResult + (cellHeight / 2));
-			allClusters[imageIndex] = Cluster(allMiddleImages, allMiddleImages[imageIndex], pos, cellHeight, cellWidth);
-				
-			lastWidthResult += cellWidth;
+			cv::Point2f pos = cv::Point2f(lastWidthResult + (currentCellWidth / 2), lastHeightResult + (cellHeight / 2));
+			allClusters[imageIndex] = Cluster(allMiddleImages, allMiddleImages[imageIndex], pos, cellHeight, currentCellWidth);
+
+			lastWidthResult += currentCellWidth;
 			imageIndex++;
 		}
 
@@ -201,7 +218,15 @@ void doVoronoi(std::vector<Cluster> allClusters, ResultImage result) {
 	// Draw Voronoi diagram
 	draw_voronoi(img_voronoi, subdiv);
 	
-	imshow(win_delaunay, result.getResult());
+	/*cv::SiftFeatureDetector detector;
+	std::vector<cv::KeyPoint> keypoints;
+	detector.detect(result.getResult(), keypoints);
+
+	// Add results to image and save.
+	cv::Mat output;
+	cv::drawKeypoints(result.getResult(), keypoints, output);
+
+	imshow(win_delaunay, output);*/
 	imshow(win_voronoi, img_voronoi);
 	waitKey(0);
 }

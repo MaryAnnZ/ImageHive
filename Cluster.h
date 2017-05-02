@@ -15,7 +15,7 @@ public:
 	ImageAttribute middleImage;
 
 	cv::Point2f pivot;
-
+	
 private:
 	int cellHeight;
 	int cellWidth;
