@@ -122,81 +122,81 @@ bool ImageAttribute::compareImage(ImageAttribute image)
 void ImageAttribute::calculateObjectness()
 {
 	if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
-		cv::Ptr<cv::saliency::Saliency> saliencyAlgorithm = cv::saliency::Saliency::create("BING");
-		if (saliencyAlgorithm == NULL) {
+		cv::Ptr<cv::saliency::Saliency> saliencyAlgorithmBing = cv::saliency::Saliency::create("BING");
+		if (saliencyAlgorithmBing == NULL) {
 			std::cout << "something went wrong :(" << std::endl;
 			return;
 		}
-		saliencyAlgorithm.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath("C:/ObjectnessTrainedModel");
-		saliencyAlgorithm.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
 
-		if (saliencyAlgorithm->computeSaliency(image, objectnessBoundingBox)) {
+		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath("C:/ObjectnessTrainedModel");
+		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
+
+		if (saliencyAlgorithmBing->computeSaliency(image, objectnessBoundingBox)) {
 			std::cout << "Objectness done" << std::endl;
-			objectnessValue = saliencyAlgorithm.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
+			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
+				int lowerLeftX = 0;
+				int lowerLeftXCounter = 0;
+				int lowerLeftY = 0;
+				int lowerLeftYcounter = 0;
+				int upperRightX = 0;
+				int upperRightXCounter = 0;
+				int upperRightY = 0;
+				int upperRightYCounter = 0;
 				int end = 0;
-				if (objectnessBoundingBox.size() > 2) {
-					end = 2;
+				if (objectnessBoundingBox.size() > 500) {
+					end = 500;
 				}
 				else {
 					end = objectnessBoundingBox.size();
 				}
 				cv::Mat clone = image.clone();
 				for (int i = 0; i < end; i++) {
-					cv::Vec4i bb = objectnessBoundingBox[i];
-					printf("index=%d, value=%f\n", i, objectnessValue[i]);
+					float highestObjectnessValue = 0;
+					int index = -1;
+					for (int k = 0; k < objectnessValue.size(); k++) {
+						if (objectnessValue.at(k) > highestObjectnessValue) {
+							highestObjectnessValue = objectnessValue.at(k);
+							index = k;
+						}
+					}
+					objectnessValue.at(index) = 0;
+					cv::Vec4i bb = objectnessBoundingBox[index];
+					if (bb[0] < image.cols / 2) {
+						lowerLeftX += bb[0];
+						lowerLeftXCounter++;
+					}
+					if (bb[1] < image.rows / 2) {
+						lowerLeftY += bb[1];
+						lowerLeftYcounter++;
+					}
+					if (bb[2] > image.cols / 2) {
+						upperRightX += bb[2];
+						upperRightXCounter++;
+					}
+					if (bb[3] > image.rows / 2) {
+						upperRightY += bb[3];
+						upperRightYCounter++;
+					}
 					cv::rectangle(clone, cv::Point(bb[0], bb[1]), cv::Point(bb[2], bb[3]), cv::Scalar(0, 0, 255), 4);
 				}
+				lowerLeftX = lowerLeftX / lowerLeftXCounter;
+				lowerLeftY = lowerLeftY / lowerLeftYcounter;
+				upperRightX = upperRightX / upperRightXCounter;
+				upperRightY = upperRightY / upperRightYCounter;
+				//std::cout << lowerLeftX << "; " << lowerLeftY << "; " << upperRightX << "; " << upperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
+				croppedImage = image.clone();
+				croppedImage = croppedImage(cv::Rect(lowerLeftX, lowerLeftY, upperRightX - lowerLeftX, upperRightY - lowerLeftY));
+				cv::rectangle(image, cv::Point(lowerLeftX, lowerLeftY), cv::Point(upperRightX, upperRightY), cv::Scalar(0, 0, 255), 4);
 				/// Display
 				cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				cv::imshow(filePath, clone);
+				cv::imshow(filePath, croppedImage);
+
+
 			}
 		}
 	}
-	//if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
-	//	cv::Ptr<cv::saliency::ObjectnessBING> objectnessBing = cv::makePtr<cv::saliency::ObjectnessBING>();
-	//	objectnessBing->setTrainingPath("ObjectnessTrainedModel/");
-	//	objectnessBing->setBBResDir("ObjectnessTrainedModel/Results");
-	//	//image.convertTo(image, CV_32FC);
-	//	if (image.type() == CV_32F && image.isContinuous()) {
-	//		if (objectnessBing->computeSaliency(image, objectnessBoundingBox)) {
-	//			objectnessValue = objectnessBing->getobjectnessValues();
-
-	//			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
-	//				cv::Mat clone = image.clone();
-	//				cv::Vec4i bb = objectnessBoundingBox[0];
-	//				printf("index=%d, value=%f\n", 0, objectnessValue[0]);
-	//				cv::rectangle(clone, cv::Point(bb[0], bb[1]), cv::Point(bb[2], bb[3]), cv::Scalar(0, 0, 255), 4);
-
-	//				char label[256];
-	//				sprintf(label, "#%d", 0 + 1);
-	//				cv::putText(clone, label, cv::Point(bb[0], bb[1] + 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 3);
-
-	//				char filename[256];
-	//				sprintf(filename, "bing_%05d.jpg", 0);
-	//				imwrite(filename, clone);
-	//			}
-	//			else {
-	//				std::cout << "1 Objectness does not work by " << filePath << std::endl;
-	//				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-	//			}
-	//		}
-	//		else {
-	//			std::cout << "2 Objectness does not work by " << filePath << std::endl;
-	//			std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-
-	//		}
-	//	}
-	//	else {
-	//		std::cout << "3 Objectness does not work by " << filePath << std::endl;
-	//		std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " << image.type() << "		" << image.isContinuous() << std::endl;
-	//		if (image.type() != CV_32F) {
-	//			std::cout << "still doesnt work " << CV_32F << std::endl;
-	//		}
-
-	//	}
-	//}
 }
 
 void ImageAttribute::outputHistogram()

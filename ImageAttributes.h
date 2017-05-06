@@ -33,6 +33,7 @@ private:
 	cv::Mat image;
 	int id;
 	cv::Mat resizedImage;
+	cv::Mat croppedImage;
 
 	std::vector<cv::Mat> bgrHist;
 	std::vector<float> valuesHOG;
@@ -43,5 +44,6 @@ private:
 
 	std::vector<cv::Vec4i> objectnessBoundingBox;
 	std::vector<float> objectnessValue;
+
 };
 
