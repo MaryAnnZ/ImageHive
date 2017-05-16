@@ -232,15 +232,17 @@ void ImageAttribute::outputHistogram()
 void ImageAttribute::calculateKeyPoints()
 {
 	if (!croppedImage.empty()) {
-		cv::Mat greyScale = croppedImage.clone();
-		
-		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);
-		
-		cv::Ptr<cv::xfeatures2d::SIFT> sift = cv::xfeatures2d::SIFT::create();
-		sift->detect(greyScale, keypoints);
+		cv::Mat greyScale = croppedImage.clone();		
+		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);	
+		cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> surf = cv::xfeatures2d::SurfFeatureDetector::create(400);
+		surf->detect(greyScale, keypoints);
+		cv::Ptr<cv::xfeatures2d::SurfDescriptorExtractor> extractor = cv::xfeatures2d::SurfFeatureDetector::create();
+		extractor->compute(greyScale, keypoints, descriptor);
+		/*cv::Ptr<cv::xfeatures2d::SIFT> sift = cv::xfeatures2d::SIFT::create();
+		sift->detectAndCompute(greyScale, cv::Mat(), keypoints, descriptor);
 		cv::drawKeypoints(croppedImage, keypoints, croppedImage);
 		cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-		cv::imshow(filePath, croppedImage);
+		cv::imshow(filePath, croppedImage);*/
 	}
 }
 

@@ -30,6 +30,8 @@ public:
 	void calculateObjectness();
 
 	void calculateKeyPoints();
+	std::vector<cv::KeyPoint> getKeyPoints() { return keypoints; }
+	cv::Mat getDescriptor() { return descriptor; }
 
 private:
 	cv::Mat image;
@@ -48,6 +50,7 @@ private:
 	std::vector<float> objectnessValue;
 
 	std::vector<cv::KeyPoint> keypoints;
+	cv::Mat descriptor;
 
 };
 

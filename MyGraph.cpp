@@ -1,5 +1,7 @@
 #include "MyGraph.h"
 #include <iostream>
+#include <opencv2\features2d.hpp>
+//#include <opencv2\opencv_modules.hpp>
 
 
 MyGraph::MyGraph()
@@ -62,7 +64,7 @@ void MyGraph::doClustering(int amountVertices)
 	std::vector<MyEdge> connectedEdges;
 	std::vector<MyEdge> neighboringEdges;
 	checkConnection(connectedEdges, neighboringEdges);
-	classesToString();
+	writeIAclasses();
 }
 
 void MyGraph::checkNeighborhood()
@@ -88,6 +90,68 @@ void MyGraph::classesToString()
 			std::cout << it->second.at(i).getEndImage().getPath() << std::endl;
 		}
 	}
+}
+
+void MyGraph::IAclassesToString()
+{
+	std::cout << "#######################################" << std::endl;
+	typedef std::map<int, std::vector<SiftImg>>::iterator itType;
+	for (itType it = classesImg.begin(); it != classesImg.end(); it++) {
+		std::cout << "Class " << it->first << " +++++++++++++++++++++" << std::endl;
+		for (int i = 0; i < it->second.size(); i++) {
+			std::cout << it->second.at(i).img.getPath() << std::endl;
+			std::cout << "Neighbor: " << it->second.at(i).neighborImg.getPath() << std::endl;
+		}
+	}
+	std::cout << "#######################################" << std::endl;
+}
+
+void MyGraph::compareSift()
+{
+	cv::FlannBasedMatcher flannMatcher;// = cv::BFMatcher();
+	typedef std::map<int, std::vector<SiftImg>>::iterator itType;
+	for (itType it = classesImg.begin(); it != classesImg.end(); it++) {
+		for (int i = 0; i < it->second.size(); i++) {
+			std::vector<cv::DMatch> matches;
+			int bestMatches = -1;
+			int bestMatchIndex = -1;
+			for (int j = 0; j < it->second.size(); j++) {
+				std::cout << "size: " << it->second.size() << ", index: " << j << std::endl;
+				if (i != j) {
+					flannMatcher.match(it->second.at(i).img.getDescriptor(), it->second.at(j).img.getDescriptor(), matches);
+					//-- Quick calculation of max and min distances between keypoints
+					double maxDist = 0;
+					double minDist = 100;
+					for (int m = 0; m < it->second.at(i).img.getDescriptor().rows; m++) {
+						double dist = matches.at(i).distance;
+						if (dist < minDist) {
+							minDist = dist;
+						}
+						if (dist > maxDist) {
+							maxDist = dist;
+						}
+					}
+					int goodMatchCounter = 0;
+					for (int m = 0; m < it->second.at(i).img.getDescriptor().rows; m++) {
+						if (matches[m].distance <= cv::max(2*minDist, 0.02)) {
+							goodMatchCounter++;
+						}
+					}
+					std::cout << "good match counter: " << goodMatchCounter << std::endl;
+					if (goodMatchCounter > bestMatches) {
+						bestMatches = goodMatchCounter;
+						bestMatchIndex = j;
+					}
+					goodMatchCounter = -1;					
+					matches.clear();
+				}
+			}
+			std::cout << bestMatchIndex << std::endl;
+			it->second.at(i).neighborImg = it->second.at(bestMatchIndex).img;
+			bestMatchIndex = -1;
+		}
+	}
+	IAclassesToString();
 }
 
 void MyGraph::checkConnection(std::vector<MyEdge> connectedEdges, std::vector<MyEdge> neighboringEdges)
@@ -124,5 +188,50 @@ void MyGraph::checkConnection(std::vector<MyEdge> connectedEdges, std::vector<My
 		}
 		neighboringEdges.erase(neighboringEdges.begin());
 		checkConnection(connectedEdges, neighboringEdges);
+	}
+}
+
+void MyGraph::writeIAclasses()
+{
+	typedef std::map<int, std::vector<MyEdge>>::iterator itType;
+	for (itType it = classes.begin(); it != classes.end(); it++) {
+		std::vector<SiftImg> ia;
+		for (int i = 0; i < it->second.size(); i++) {
+			if (ia.empty()) {
+				SiftImg siftImg;
+				siftImg.img = it->second.at(i).getStartImage();
+				SiftImg siftImg2;
+				siftImg2.img = it->second.at(i).getEndImage();
+				ia.push_back(siftImg);
+				ia.push_back(siftImg2);
+			}
+			else {
+				bool startFound = false;
+				bool endFound = false;
+				for (int k = 0; k < ia.size(); k++) {
+					if (it->second.at(i).getStartImage().compareImage(ia.at(k).img)) {
+						startFound = true;
+					}
+					if (it->second.at(i).getEndImage().compareImage(ia.at(k).img)) {
+						endFound = true;
+					}
+					if (startFound && endFound) {
+						break;
+					}
+				}
+				if (!startFound) {
+					SiftImg startImg;
+					startImg.img = it->second.at(i).getStartImage();
+					ia.push_back(startImg);
+				}
+				if (!endFound) {
+					SiftImg endImg;
+					endImg.img = it->second.at(i).getEndImage();
+					ia.push_back(endImg);
+				}
+			}
+		}
+		classesImg[it->first] = std::vector<SiftImg>(ia);
+		ia.clear();
 	}
 }

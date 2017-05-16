@@ -91,6 +91,7 @@ int main()
 			std::cout << "*****************"  << std::endl;
 	}
 	graph.doClustering(allImages.size());
+	graph.compareSift();
 	std::vector<Cluster> allClusters = createClusters(allImages,result);
 
 	doVoronoi(allClusters,result);
