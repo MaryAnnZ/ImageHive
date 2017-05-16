@@ -5,13 +5,15 @@
 #include <opencv2\objdetect\objdetect.hpp>
 #include <stdio.h>
 #include <opencv2\saliency.hpp>
+#include <opencv2\xfeatures2d.hpp>
+
 using namespace std;
 using namespace cv;
 using namespace saliency;
 ImageAttribute::ImageAttribute(cv::Mat img, int idVal, std::string path)
 {
 	image = img;
-	resizedImage = image;
+	resizedImage = image.clone();
 	id = idVal;
 	filePath = path;
 }
@@ -190,8 +192,8 @@ void ImageAttribute::calculateObjectness()
 				croppedImage = croppedImage(cv::Rect(lowerLeftX, lowerLeftY, upperRightX - lowerLeftX, upperRightY - lowerLeftY));
 				cv::rectangle(image, cv::Point(lowerLeftX, lowerLeftY), cv::Point(upperRightX, upperRightY), cv::Scalar(0, 0, 255), 4);
 				/// Display
-				cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				cv::imshow(filePath, croppedImage);
+				/*cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+				cv::imshow(filePath, croppedImage);*/
 
 
 			}
@@ -225,5 +227,20 @@ void ImageAttribute::outputHistogram()
 	/// Display
 	cv::namedWindow("calcHist", CV_WINDOW_AUTOSIZE);
 	cv::imshow("calcHist", histImage);
+}
+
+void ImageAttribute::calculateKeyPoints()
+{
+	if (!croppedImage.empty()) {
+		cv::Mat greyScale = croppedImage.clone();
+		
+		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);
+		
+		cv::Ptr<cv::xfeatures2d::SIFT> sift = cv::xfeatures2d::SIFT::create();
+		sift->detect(greyScale, keypoints);
+		cv::drawKeypoints(croppedImage, keypoints, croppedImage);
+		cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+		cv::imshow(filePath, croppedImage);
+	}
 }
 

@@ -57,6 +57,7 @@ int main()
 		allImages.at(i).calcColorHistogram();
 		allImages.at(i).calcHOG();
 		allImages.at(i).calculateObjectness();
+		allImages.at(i).calculateKeyPoints();
 	}
 		
 	for (int i = 0; i < allImages.size(); i++) {

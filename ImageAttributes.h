@@ -29,6 +29,8 @@ public:
 
 	void calculateObjectness();
 
+	void calculateKeyPoints();
+
 private:
 	cv::Mat image;
 	int id;
@@ -44,6 +46,8 @@ private:
 
 	std::vector<cv::Vec4i> objectnessBoundingBox;
 	std::vector<float> objectnessValue;
+
+	std::vector<cv::KeyPoint> keypoints;
 
 };
 

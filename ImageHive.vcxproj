@@ -126,7 +126,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;opencv_saliency320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core320.lib;opencv_xfeatures2d320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;opencv_saliency320.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
