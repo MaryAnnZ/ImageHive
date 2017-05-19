@@ -19,11 +19,17 @@ using namespace cv;
 using namespace std;
 
 //voronoi methods
-std::vector<Cluster> createClusters(std::vector<ImageAttribute>, ResultImage);
+void drawGlobalClusters(std::vector<Cluster>, ResultImage);
 void doVoronoi(std::vector<Cluster>, ResultImage);
 void draw_point(Mat&, Point2f, Scalar);
 void draw_delaunay(Mat&, Subdiv2D&, Scalar);
 void draw_voronoi(Mat&, Subdiv2D&);
+std::vector<Cluster> doLocalClusters(std::vector<ImageAttribute> allImages,
+	std::map<int, std::vector<MyEdge>> globalClasses,
+	std::map<int, std::vector<MyGraph::SiftImg>> localClasses,
+	ResultImage result);
+Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat localResult);
+
 
 //col,row
 std::map<int, std::vector<int>> gridLayout = { { 1,{ 1,1 } },{ 2,{ 2,1 } },{ 3,{ 2,2 } },
@@ -42,14 +48,14 @@ int main()
 		return 0;
 	}
 
-	int resultHeight = 400;
-	int resultWidth = 600;
+	int resultHeight = 600;
+	int resultWidth = 900;
 
-	ResultImage result = ResultImage(600, 400);
+	ResultImage result = ResultImage(resultWidth, resultHeight);
 
 	//color and edge histogram
 	std::vector<ImageAttribute> allImages(images.size());
-	MyGraph graph = MyGraph();
+	
 	for (int i = 0; i < images.size(); i++) {
 		//allImages.push_back(ImageAttribute::ImageAttribute(images.at(i), i, filePaths.at(i)));	
 		ImageAttribute tmp = ImageAttribute::ImageAttribute(images.at(i), i, filePaths.at(i));
@@ -59,42 +65,19 @@ int main()
 		allImages.at(i).calculateObjectness();
 		allImages.at(i).calculateKeyPoints();
 	}
-		
-	for (int i = 0; i < allImages.size(); i++) {
-			ImageAttribute currentIA = allImages[i];
-			
-			std::vector<float> hogCorr;
-			float maxHog = -1;
-			std::vector<float> histCorr;
-			for (int j = 0; j < allImages.size(); j++) {
-				//small corr; big no corr -->normalize
-				float corrHog = currentIA.compareHOGvalue(allImages.at(j).getHOGvalues());
-				// 1 -> corr; 0 -> no corr;
-				float corrHist = currentIA.compareHist(allImages.at(j).getColorHis());
-				hogCorr.push_back(corrHog);
-				if (corrHog > maxHog) {
-					maxHog = corrHog;
-				}
-				histCorr.push_back(1 - corrHist);
 
-			}
-			std::cout << "comparing " << filePaths.at(i) << std::endl;
-			for (int k = 0; k < histCorr.size(); k++) {
-				//normalize HOG
-				float hogValue = hogCorr.at(k) / maxHog;
-				if (i != k) { //no edges with the same start and end vertex
-					graph.createEdge(allImages.at(i), allImages.at(k), hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
-					std::cout << " with " << filePaths.at(k) << std::endl;
-					std::cout << "value: " << hogValue + histCorr.at(k) << std::endl;
-				}
-			}
-			std::cout << "*****************"  << std::endl;
-	}
+	MyGraph graph = MyGraph();
+	graph.buildGraph(allImages);
+
 	graph.doClustering(allImages.size());
+	graph.classesToString();
 	graph.compareSift();
-	std::vector<Cluster> allClusters = createClusters(allImages,result);
+	graph.IAclassesToString();
 
-	doVoronoi(allClusters,result);
+	std::vector<Cluster> allClusters = doLocalClusters(allImages,graph.getClasses(),graph.getLocalClasses(),result);
+
+	drawGlobalClusters(allClusters, result);
+	//doVoronoi(allClusters,result);
 		
 	cvWaitKey(0);
 		
@@ -102,33 +85,93 @@ int main()
 	return 0;
 }
 
-std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages, ResultImage result) {
+std::vector<Cluster> doLocalClusters(std::vector<ImageAttribute> allImages,
+									std::map<int, std::vector<MyEdge>> globalClasses,
+									std::map<int, std::vector<MyGraph::SiftImg>> localClasses, 
+									ResultImage result) {
+
+	std::map<int, int> isAlreadyClustered; //image ID to cluster ID mapping
+
+	for (int i = 0;i < allImages.size();i++) {
+		isAlreadyClustered.insert({ allImages[i].getId(),0});
+	}
+
+	std::map<int, std::vector<ImageAttribute>> globalCusterMapping;
+
+	for (int i = 0;i < globalClasses.size();i++) {
+		for (int num = 0;num < globalClasses[i].size();num++) {
+			if (isAlreadyClustered[globalClasses[i][num].getStartImage().getId()]!=1) {
+				isAlreadyClustered.at(globalClasses[i][num].getStartImage().getId()) = 1;
+				globalCusterMapping[i].push_back(globalClasses[i][num].getStartImage());
+				
+			}
+
+			if (isAlreadyClustered[globalClasses[i][num].getEndImage().getId()]!=1) {
+				isAlreadyClustered.at(globalClasses[i][num].getEndImage().getId()) = 1;
+				globalCusterMapping[i].push_back(globalClasses[i][num].getEndImage());
+
+			}
+		}
+	}
 	
-	std::vector<Cluster> allClusters(allMiddleImages.size());
+	std::vector<Cluster> allLocalClusters;
 
-	int imageIndex = 0;
-	bool even = (int)allMiddleImages.size() % 2 == 0;
+	bool even = (int)globalCusterMapping.size() % 2 == 0;
 
-	std::vector<int> colRowLayout = gridLayout[allMiddleImages.size()];
+	std::vector<int> colRowLayout = gridLayout[globalCusterMapping.size()];
 	int colCount = colRowLayout[0];
 	int rowCount = colRowLayout[1];
-	int lastColCount = colCount - ((colCount*rowCount) - allMiddleImages.size());
+	int lastColCount = colCount - ((colCount*rowCount) - globalCusterMapping.size());
 
 	int cellHeight = result.getHeight() / rowCount;
+	
+	int cellWidth = result.getWidth() / colCount;
+	int lastCellWidth = result.getWidth() / lastColCount;
+
+
+	for (int i = 0;i < globalCusterMapping.size();i++) {
+
+		if (i > globalCusterMapping.size() - lastColCount) {
+			allLocalClusters.push_back(createLocalPlacement(globalCusterMapping[i], cv::Mat(cellHeight, cellWidth, CV_8UC3, double(0))));
+		}
+		else {
+			allLocalClusters.push_back(createLocalPlacement(globalCusterMapping[i], cv::Mat(cellHeight, lastCellWidth, CV_8UC3, double(0))));
+		}
+
+	}
+
+	return allLocalClusters;
+	
+}
+
+Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat localResult) {
+	
+	Cluster cluster(allImages);
+	cluster.createLocalGraph();
+
+	int imageIndex = 0;
+	bool even = (int)allImages.size() % 2 == 0;
+
+	std::vector<int> colRowLayout = gridLayout[allImages.size()];
+	int colCount = colRowLayout[0];
+	int rowCount = colRowLayout[1];
+	int lastColCount = colCount - ((colCount*rowCount) - allImages.size());
+
+	int cellHeight = localResult.size().height / rowCount;
 
 	//place all images on the result image (global placement)
 	std::vector<std::vector<Mat>> canvasCluster(rowCount, std::vector<Mat>(colCount));
-	cv::Mat tmpResult = cv::Mat(result.getHeight(), result.getWidth(), CV_8UC3);
+	cv::Mat tmpResult = cv::Mat(localResult.size().height, localResult.size().width, CV_8UC3);
 
-	int cellWidth = result.getWidth() / colCount;
-	int lastCellWidth = result.getWidth() / lastColCount;
+	int cellWidth = localResult.size().width / colCount;
+	int lastCellWidth = localResult.size().width / lastColCount;
 
 	int lastHeightResult = 0;
 	int lastWidthResult = 0;
 
 	for (int row = 0; row < rowCount;row++) {
-		for (int col = 0;col < colCount && imageIndex + 1 <= (allMiddleImages.size());col++) {
-			Size oldSize = allMiddleImages[imageIndex].getOriginSize();
+		for (int col = 0;col < colCount && imageIndex + 1 <= (allImages.size());col++) {
+			Size oldSize = allImages[imageIndex].getOriginSize();
 			cv::Mat resizedImage;
 			int currentCellWidth = cellWidth;
 			if (row == rowCount - 1) {
@@ -138,11 +181,11 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 
 			if (oldSize.width >= oldSize.height) {
 				float widthRatio = (float)currentCellWidth / (float)oldSize.width;
-				resizedImage = allMiddleImages[imageIndex].resize(Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
+				resizedImage = allImages[imageIndex].resize(Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
 			}
 			else {
 				float heightRatio = (float)cellHeight / (float)oldSize.height;
-				resizedImage = allMiddleImages[imageIndex].resize(Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
+				resizedImage = allImages[imageIndex].resize(Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
 			}
 
 			canvasCluster.at(row).at(col) = resizedImage;
@@ -153,8 +196,8 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 
 
 			cv::Point2f pos = cv::Point2f(lastWidthResult + (currentCellWidth / 2), lastHeightResult + (cellHeight / 2));
-			allClusters[imageIndex] = Cluster(allMiddleImages, allMiddleImages[imageIndex], pos, cellHeight, currentCellWidth);
-
+			cluster.addLocalCluster(allImages[imageIndex], pos, cellHeight, currentCellWidth);
+				
 			lastWidthResult += currentCellWidth;
 			imageIndex++;
 		}
@@ -163,71 +206,141 @@ std::vector<Cluster> createClusters(std::vector<ImageAttribute> allMiddleImages,
 		lastWidthResult = 1;
 	}
 
-	result.setResult(tmpResult);
-	imshow("cluster_global", result.getResult());
+	imshow("cluster_local"+ allImages[0].getId(), tmpResult);
 
-	return allClusters;
+	//set Resulting Image 
+	cluster.setResult(tmpResult);
+
+	return cluster;
 
 }
 
 
-void doVoronoi(std::vector<Cluster> allClusters, ResultImage result) {
-	
-	std::vector<Point2f> allPositions;
 
-	for each (Cluster clus in allClusters) {
-		allPositions.push_back(clus.pivot);
+ void drawGlobalClusters(std::vector<Cluster> allClusters, ResultImage globalResult) {
+	
+	int imageindex = 0;
+	bool even = (int)allClusters.size() % 2 == 0;
+
+	std::vector<int> colrowlayout = gridLayout[allClusters.size()];
+	int colcount = colrowlayout[0];
+	int rowcount = colrowlayout[1];
+	int lastcolcount = colcount - ((colcount*rowcount) - allClusters.size());
+
+	int cellheight = globalResult.getHeight() / rowcount;
+
+	//place all images on the result image (global placement)
+	std::vector<std::vector<cv::Mat>> canvascluster(rowcount, std::vector<cv::Mat>(colcount));
+	cv::Mat tmpResult = cv::Mat(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3);
+
+	int cellwidth = globalResult.getWidth() / colcount;
+	int lastcellwidth = globalResult.getWidth() / lastcolcount;
+
+	int lastheightresult = 0;
+	int lastwidthresult = 0;
+
+	for (int row = 0; row < rowcount;row++) {
+		for (int col = 0;col < colcount && imageindex + 1 <= (allClusters.size());col++) {
+			Size oldsize = allClusters[imageindex].getResult().size();
+			cv::Mat resizedimage;
+			int currentcellwidth = cellwidth;
+			if (row == rowcount - 1) {
+				//last row, split different!
+				currentcellwidth = lastcellwidth;
+			}
+
+			if (oldsize.width >= oldsize.height) {
+				float widthratio = (float)currentcellwidth / (float)oldsize.width;
+				cv::resize(allClusters[imageindex].getResult(), resizedimage, Size(currentcellwidth - 1, min(cellheight, oldsize.height*widthratio)));
+			}
+			else {
+				float heightratio = (float)cellheight / (float)oldsize.height;
+				cv::resize(allClusters[imageindex].getResult(), resizedimage, Size(min(currentcellwidth, oldsize.width*heightratio), cellheight - 1));
+			}
+
+			canvascluster.at(row).at(col) = resizedimage;
+
+			Size size = canvascluster.at(row).at(col).size();
+
+			canvascluster.at(row).at(col).copyTo(tmpResult(Rect(lastwidthresult, lastheightresult, size.width, size.height)));
+
+
+			cv::Point2f pos = cv::Point2f(lastwidthresult + (currentcellwidth / 2), lastheightresult + (cellheight / 2));
+
+			allClusters[imageindex].setPivot(pos);
+
+			lastwidthresult += currentcellwidth;
+			imageindex++;
+		}
+
+		lastheightresult += cellheight;
+		lastwidthresult = 1;
 	}
 
-	// Define window names
-	string win_delaunay = "Delaunay Triangulation";
-	string win_voronoi = "Voronoi Diagram";
+	globalResult.setResult(tmpResult);
+	imshow("cluster_global", globalResult.getResult());
+
+
+}
+
+
+void dovoronoi(std::vector<Cluster> allclusters, ResultImage globalResult) {
 	
-	// Define colors for drawing.
+	std::vector<Point2f> allpositions;
+
+	for each (Cluster clus in allclusters) {
+		allpositions.push_back(clus.getPivot());
+	}
+
+	// define window names
+	string win_delaunay = "delaunay triangulation";
+	string win_voronoi = "voronoi diagram";
+	
+	// define colors for drawing.
 	Scalar delaunay_color(255, 255, 255), points_color(0, 0, 255);
 	
-	// Keep a copy around
-	Mat img_orig = result.getResult().clone();
+	// keep a copy around
+	Mat img_orig = globalResult.getResult().clone();
 
-	// Rectangle result be used with Subdiv2D
-	Rect rect(0, 0, result.getWidth(), result.getHeight());
+	// rectangle result be used with subdiv2d
+	Rect rect(0, 0, globalResult.getWidth(), globalResult.getHeight());
 
-	// Create an instance of Subdiv2D
+	// create an instance of subdiv2d
 	Subdiv2D subdiv(rect);
 	
-	// Insert points into subdiv
-	for (vector<Point2f>::iterator it = allPositions.begin(); it != allPositions.end(); it++)
+	// insert points into subdiv
+	for (vector<Point2f>::iterator it = allpositions.begin(); it != allpositions.end(); it++)
 	{
 		subdiv.insert(*it);
-		// Show animation
+		// show animation
 		Mat img_copy = img_orig.clone();
-		// Draw delaunay triangles
+		// draw delaunay triangles
 		draw_delaunay(img_copy, subdiv, delaunay_color);
 		imshow(win_delaunay, img_copy);
 	}
 
-	// Draw delaunay triangles
-	draw_delaunay(result.getResult(), subdiv, delaunay_color);
+	// draw delaunay triangles
+	draw_delaunay(globalResult.getResult(), subdiv, delaunay_color);
 
-	// Draw points
-	for (vector<Point2f>::iterator it = allPositions.begin(); it != allPositions.end(); it++)
+	// draw points
+	for (vector<Point2f>::iterator it = allpositions.begin(); it != allpositions.end(); it++)
 	{
-		draw_point(result.getResult(), *it, points_color);
+		draw_point(globalResult.getResult(), *it, points_color);
 	}
 
-	// Allocate space for Voronoi Diagram
-	Mat img_voronoi = Mat::zeros(result.getResult().rows, result.getResult().cols, CV_8UC3);
+	// allocate space for voronoi diagram
+	Mat img_voronoi = Mat::zeros(globalResult.getResult().rows, globalResult.getResult().cols, CV_8UC3);
 
-	// Draw Voronoi diagram
+	// draw voronoi diagram
 	draw_voronoi(img_voronoi, subdiv);
 	
-	/*cv::SiftFeatureDetector detector;
-	std::vector<cv::KeyPoint> keypoints;
-	detector.detect(result.getResult(), keypoints);
+	/*cv::siftfeaturedetector detector;
+	std::vector<cv::keypoint> keypoints;
+	detector.detect(result.getresult(), keypoints);
 
-	// Add results to image and save.
-	cv::Mat output;
-	cv::drawKeypoints(result.getResult(), keypoints, output);
+	// add results to image and save.
+	cv::mat output;
+	cv::drawkeypoints(result.getresult(), keypoints, output);
 
 	imshow(win_delaunay, output);*/
 	imshow(win_voronoi, img_voronoi);

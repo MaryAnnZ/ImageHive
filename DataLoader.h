@@ -14,10 +14,10 @@ public:
 	~DataLoader();
 
 	std::vector<cv::String> getFilePaths() { return filePaths; };
-	std::vector<cv::Mat> loadDataset();
+	std::vector<cv::Mat> DataLoader::loadDataset();
 
 private:
-	std::string browseFolder();
+	std::string DataLoader::browseFolder();
 	std::vector<cv::String> filePaths;
 };
 

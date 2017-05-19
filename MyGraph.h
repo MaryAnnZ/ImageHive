@@ -15,14 +15,18 @@ public:
 	MyGraph();
 	~MyGraph();
 
+	void buildGraph(std::vector<ImageAttribute> all);
+
 	void createEdge(ImageAttribute start, ImageAttribute end, float weight);
-	void doClustering(int amountVertices);
+	int doClustering(int amountVertices);
 	void checkNeighborhood();
 	std::map<int, std::vector<MyEdge>> getClasses() { return classes; }
+	std::map<int, std::vector<SiftImg>> getLocalClasses() { return classesImg; }
 	void classesToString();
 	void IAclassesToString();
 
 	void compareSift();
+
 	
 private:
 	std::vector<MyEdge> edges;

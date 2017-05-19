@@ -5,7 +5,8 @@
 class ImageAttribute
 {
 public:
-	ImageAttribute::ImageAttribute(cv::Mat img, int idVal, std::string path);
+	
+	::ImageAttribute(cv::Mat img, int idVal, std::string path);
 	ImageAttribute();
 	~ImageAttribute();
 
@@ -32,6 +33,10 @@ public:
 	void calculateKeyPoints();
 	std::vector<cv::KeyPoint> getKeyPoints() { return keypoints; }
 	cv::Mat getDescriptor() { return descriptor; }
+
+	bool operator<(ImageAttribute other) const { return image.size < other.image.size; }
+
+	cv::Mat getCropped() {return croppedImage;};
 
 private:
 	cv::Mat image;

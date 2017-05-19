@@ -14,14 +14,50 @@ MyGraph::~MyGraph()
 {
 }
 
+void MyGraph::buildGraph(std::vector<ImageAttribute> all) {
+	for (int i = 0; i < all.size(); i++) {
+		ImageAttribute currentIA = all[i];
+
+		std::vector<float> hogCorr;
+		float maxHog = -1;
+		std::vector<float> histCorr;
+		for (int j = 0; j < all.size(); j++) {
+			//small corr; big no corr -->normalize
+			float corrHog = currentIA.compareHOGvalue(all.at(j).getHOGvalues());
+			// 1 -> corr; 0 -> no corr;
+			float corrHist = currentIA.compareHist(all.at(j).getColorHis());
+			hogCorr.push_back(corrHog);
+			if (corrHog > maxHog) {
+				maxHog = corrHog;
+			}
+			histCorr.push_back(1 - corrHist);
+
+		}
+		std::cout << "comparing " << all.at(i).getPath() << std::endl;
+		for (int k = 0; k < histCorr.size(); k++) {
+			//normalize HOG
+
+			float hogValue = hogCorr.at(k) / maxHog;
+			
+			if (i != k) { //no edges with the same start and end vertex
+				createEdge(all.at(i), all.at(k), hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
+				std::cout << " with " << all.at(k).getPath() << std::endl;
+				std::cout << "value: " << hogValue + histCorr.at(k) << std::endl;
+			}
+		}
+		std::cout << "*****************" << std::endl;
+	}
+
+}
+
 void MyGraph::createEdge(ImageAttribute start, ImageAttribute end, float weight)
 {
 	edges.push_back(MyEdge(start, end, weight));
 }
 
-void MyGraph::doClustering(int amountVertices)
+int MyGraph::doClustering(int amountVertices)
 {
-	while (visitedVertices.empty() || visitedVertices.size() != amountVertices) {
+	while ((visitedVertices.empty() || visitedVertices.size() != amountVertices) && !edges.empty()) {
 		float minWeight = edges.at(0).getWeight();
 		int chosenEdgeIndex = 0;
 		for (int i = 0; i < edges.size(); i++) {
@@ -65,6 +101,8 @@ void MyGraph::doClustering(int amountVertices)
 	std::vector<MyEdge> neighboringEdges;
 	checkConnection(connectedEdges, neighboringEdges);
 	writeIAclasses();
+
+	return classes.size();
 }
 
 void MyGraph::checkNeighborhood()
@@ -118,7 +156,7 @@ void MyGraph::compareSift()
 			for (int j = 0; j < it->second.size(); j++) {
 				std::cout << "size: " << it->second.size() << ", index: " << j << std::endl;
 				if (i != j) {
-					flannMatcher.match(it->second.at(i).img.getDescriptor(), it->second.at(j).img.getDescriptor(), matches);
+					flannMatcher.match(it->second[i].img.getDescriptor(), it->second[i].img.getDescriptor(), matches);
 					//-- Quick calculation of max and min distances between keypoints
 					double maxDist = 0;
 					double minDist = 100;
@@ -234,4 +272,5 @@ void MyGraph::writeIAclasses()
 		classesImg[it->first] = std::vector<SiftImg>(ia);
 		ia.clear();
 	}
+
 }

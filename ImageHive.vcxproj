@@ -114,7 +114,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core320.lib;opencv_xfeatures2d320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -126,7 +126,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core320.lib;opencv_xfeatures2d320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;opencv_saliency320.lib;opencv_flann320.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core320.lib;opencv_xfeatures2d320.lib;opencv_xfeatures2d320.lib;opencv_highgui320.lib;opencv_imgproc320.lib;opencv_features2d320.lib;opencv_objdetect320.lib;opencv_stitching320.lib;opencv_imgcodecs320.lib;opencv_saliency320.lib;opencv_flann320.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -135,6 +135,7 @@
     <ClCompile Include="DataLoader.cpp" />
     <ClCompile Include="ImageAttributes.cpp" />
     <ClCompile Include="ImageHive.cpp" />
+    <ClCompile Include="LocalCluster.cpp" />
     <ClCompile Include="MyGraph.cpp" />
     <ClCompile Include="MyEdge.cpp" />
     <ClCompile Include="ResultImage.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="Cluster.h" />
     <ClInclude Include="DataLoader.h" />
     <ClInclude Include="ImageAttributes.h" />
+    <ClInclude Include="LocalCluster.h" />
     <ClInclude Include="MyGraph.h" />
     <ClInclude Include="MyEdge.h" />
     <ClInclude Include="ResultImage.h" />
