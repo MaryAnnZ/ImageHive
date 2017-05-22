@@ -18,6 +18,8 @@ public:
 	cv::Mat getResizedImage(){return resizedImage;};
 
 	cv::Mat resize(cv::Size newSize);
+	cv::Mat resize(cv::Mat, cv::Size newsize);
+
 	cv::Size getOriginSize() { return image.size(); };
 
 	std::vector<cv::Mat> getColorHis() { return bgrHist; }
@@ -37,6 +39,8 @@ public:
 	bool operator<(ImageAttribute other) const { return image.size < other.image.size; }
 
 	cv::Mat getCropped() {return croppedImage;};
+
+	
 
 private:
 	cv::Mat image;

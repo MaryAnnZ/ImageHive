@@ -14,6 +14,7 @@
 #include "Cluster.h"
 #include "ResultImage.h"
 #include "MyGraph.h"
+#include "Voronoi.h"
 
 using namespace cv;
 using namespace std;
@@ -22,13 +23,12 @@ using namespace std;
 void drawGlobalClusters(std::vector<Cluster>, ResultImage);
 void doVoronoi(std::vector<Cluster>, ResultImage);
 void draw_point(Mat&, Point2f, Scalar);
-void draw_delaunay(Mat&, Subdiv2D&, Scalar);
-void draw_voronoi(Mat&, Subdiv2D&);
 std::vector<Cluster> doLocalClusters(std::vector<ImageAttribute> allImages,
 	std::map<int, std::vector<MyEdge>> globalClasses,
 	std::map<int, std::vector<MyGraph::SiftImg>> localClasses,
 	ResultImage result);
 Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat localResult);
+void doLocalVoronoi(std::vector<Cluster>);
 
 
 //col,row
@@ -140,6 +140,8 @@ std::vector<Cluster> doLocalClusters(std::vector<ImageAttribute> allImages,
 
 	}
 
+	doLocalVoronoi(allLocalClusters);
+
 	return allLocalClusters;
 	
 }
@@ -171,7 +173,7 @@ Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat loca
 
 	for (int row = 0; row < rowCount;row++) {
 		for (int col = 0;col < colCount && imageIndex + 1 <= (allImages.size());col++) {
-			Size oldSize = allImages[imageIndex].getOriginSize();
+			Size oldSize = allImages[imageIndex].getCropped().size();
 			cv::Mat resizedImage;
 			int currentCellWidth = cellWidth;
 			if (row == rowCount - 1) {
@@ -181,21 +183,20 @@ Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat loca
 
 			if (oldSize.width >= oldSize.height) {
 				float widthRatio = (float)currentCellWidth / (float)oldSize.width;
-				resizedImage = allImages[imageIndex].resize(Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
+				resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(),Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
 			}
 			else {
 				float heightRatio = (float)cellHeight / (float)oldSize.height;
-				resizedImage = allImages[imageIndex].resize(Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
+				resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(),Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
 			}
 
 			canvasCluster.at(row).at(col) = resizedImage;
-
 			Size size = canvasCluster.at(row).at(col).size();
 
 			canvasCluster.at(row).at(col).copyTo(tmpResult(Rect(lastWidthResult, lastHeightResult, size.width, size.height)));
-
-
 			cv::Point2f pos = cv::Point2f(lastWidthResult + (currentCellWidth / 2), lastHeightResult + (cellHeight / 2));
+			draw_point(tmpResult, pos, Scalar(0, 0, 255));
+
 			cluster.addLocalCluster(allImages[imageIndex], pos, cellHeight, currentCellWidth);
 				
 			lastWidthResult += currentCellWidth;
@@ -265,10 +266,6 @@ Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat loca
 			canvascluster.at(row).at(col).copyTo(tmpResult(Rect(lastwidthresult, lastheightresult, size.width, size.height)));
 
 
-			cv::Point2f pos = cv::Point2f(lastwidthresult + (currentcellwidth / 2), lastheightresult + (cellheight / 2));
-
-			allClusters[imageindex].setPivot(pos);
-
 			lastwidthresult += currentcellwidth;
 			imageindex++;
 		}
@@ -283,127 +280,53 @@ Cluster createLocalPlacement(std::vector<ImageAttribute> allImages, cv::Mat loca
 
 }
 
+void doLocalVoronoi(std::vector<Cluster> allclusters) {
+	for each (Cluster clus in allclusters) {
 
-void dovoronoi(std::vector<Cluster> allclusters, ResultImage globalResult) {
+		cv::Mat image = clus.getResult();
+
+		std::vector<cv::Point2f> allpositions = clus.getAllLocalPivots();
+		//std::map<cv::Point2f, ImageAttribute> pointsImageMapping = clus.getImagePointMapping();
+		
+
+		// define window names
+		string win_voronoi = "voronoi diagram";
+
+		// allocate space for voronoi diagram
+		Mat img_voronoi = Mat::zeros(image.rows, image.cols, CV_8UC3);
+
+		Voronoi v;
+		v.Make(&img_voronoi, allpositions);
+
+		imshow(win_voronoi, img_voronoi);
+		waitKey(0);
+
+	}
+ }
+
+void doVoronoi(std::vector<Cluster> allclusters, ResultImage globalResult) {
 	
-	std::vector<Point2f> allpositions;
+	std::vector<cv::Point2f> allpositions;
 
 	for each (Cluster clus in allclusters) {
 		allpositions.push_back(clus.getPivot());
 	}
 
-	// define window names
-	string win_delaunay = "delaunay triangulation";
 	string win_voronoi = "voronoi diagram";
-	
-	// define colors for drawing.
-	Scalar delaunay_color(255, 255, 255), points_color(0, 0, 255);
-	
-	// keep a copy around
-	Mat img_orig = globalResult.getResult().clone();
-
-	// rectangle result be used with subdiv2d
-	Rect rect(0, 0, globalResult.getWidth(), globalResult.getHeight());
-
-	// create an instance of subdiv2d
-	Subdiv2D subdiv(rect);
-	
-	// insert points into subdiv
-	for (vector<Point2f>::iterator it = allpositions.begin(); it != allpositions.end(); it++)
-	{
-		subdiv.insert(*it);
-		// show animation
-		Mat img_copy = img_orig.clone();
-		// draw delaunay triangles
-		draw_delaunay(img_copy, subdiv, delaunay_color);
-		imshow(win_delaunay, img_copy);
-	}
-
-	// draw delaunay triangles
-	draw_delaunay(globalResult.getResult(), subdiv, delaunay_color);
-
-	// draw points
-	for (vector<Point2f>::iterator it = allpositions.begin(); it != allpositions.end(); it++)
-	{
-		draw_point(globalResult.getResult(), *it, points_color);
-	}
-
 	// allocate space for voronoi diagram
 	Mat img_voronoi = Mat::zeros(globalResult.getResult().rows, globalResult.getResult().cols, CV_8UC3);
 
-	// draw voronoi diagram
-	draw_voronoi(img_voronoi, subdiv);
+	Voronoi v;
+	v.Make(&img_voronoi, allpositions);
 	
-	/*cv::siftfeaturedetector detector;
-	std::vector<cv::keypoint> keypoints;
-	detector.detect(result.getresult(), keypoints);
-
-	// add results to image and save.
-	cv::mat output;
-	cv::drawkeypoints(result.getresult(), keypoints, output);
-
-	imshow(win_delaunay, output);*/
 	imshow(win_voronoi, img_voronoi);
 	waitKey(0);
 }
 
 // Draw a single point
-void draw_point(Mat& img, Point2f fp, Scalar color)
+void draw_point(Mat& img, cv::Point2f fp, Scalar color)
 {
 	circle(img, fp, 2, color, CV_FILLED, CV_AA, 0);
 }
 
-// Draw delaunay triangles
-void draw_delaunay(Mat& img, Subdiv2D& subdiv, Scalar delaunay_color)
-{
 
-	vector<Vec6f> triangleList;
-	subdiv.getTriangleList(triangleList);
-	vector<Point> pt(3);
-	Size size = img.size();
-	Rect rect(0, 0, size.width, size.height);
-
-	for (size_t i = 0; i < triangleList.size(); i++)
-	{
-		Vec6f t = triangleList[i];
-		pt[0] = Point(cvRound(t[0]), cvRound(t[1]));
-		pt[1] = Point(cvRound(t[2]), cvRound(t[3]));
-		pt[2] = Point(cvRound(t[4]), cvRound(t[5]));
-
-		// Draw rectangles completely inside the image.
-		if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2]))
-		{
-			line(img, pt[0], pt[1], delaunay_color, 1, CV_AA, 0);
-			line(img, pt[1], pt[2], delaunay_color, 1, CV_AA, 0);
-			line(img, pt[2], pt[0], delaunay_color, 1, CV_AA, 0);
-		}
-	}
-}
-
-//Draw voronoi diagram
-void draw_voronoi(Mat& img, Subdiv2D& subdiv)
-{
-	vector<vector<Point2f> > facets;
-	vector<Point2f> centers;
-	subdiv.getVoronoiFacetList(vector<int>(), facets, centers);
-
-	vector<Point> ifacet;
-	vector<vector<Point> > ifacets(1);
-
-	for (size_t i = 0; i < facets.size(); i++)
-	{
-		ifacet.resize(facets[i].size());
-		for (size_t j = 0; j < facets[i].size(); j++)
-			ifacet[j] = facets[i][j];
-
-		Scalar color;
-		color[0] = rand() & 255;
-		color[1] = rand() & 255;
-		color[2] = rand() & 255;
-		fillConvexPoly(img, ifacet, color, 8, 0);
-
-		ifacets[0] = ifacet;
-		polylines(img, ifacets, true, Scalar(), 1, CV_AA, 0);
-		circle(img, centers[i], 3, Scalar(), CV_FILLED, CV_AA, 0);
-	}
-}

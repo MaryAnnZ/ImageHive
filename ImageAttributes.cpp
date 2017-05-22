@@ -33,6 +33,14 @@ cv::Mat ImageAttribute::resize(cv::Size newSize)
 	return resizedImage;
 }
 
+cv::Mat ImageAttribute::resize(cv::Mat image, cv::Size newsize) {
+
+	cv::Mat newImage;
+	cv::resize(image, newImage, newsize);
+	return newImage;
+
+}
+
 void ImageAttribute::calcColorHistogram()
 {
 	if (bgrHist.empty()) {

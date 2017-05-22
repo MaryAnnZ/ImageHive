@@ -18,11 +18,16 @@ public:
 	void setResult(cv::Mat resultImage) { result = resultImage; };
 	void createLocalGraph();
 
+	std::vector<cv::Point2f> getAllLocalPivots() {return allLocalPoints;};
 	cv::Mat getResult() { return result; };
-	void setPivot(cv::Point2f newpivot) { pivot=newpivot; };
 	cv::Point2f getPivot() { return pivot; };
 	
+	//std::map<cv::Point2f, ImageAttribute> getImagePointMapping() { return imagePointMapping; };
+
 private:
+	void updateClusterPivot();
+
+	std::vector<cv::Point2f> allLocalPoints;
 	std::vector<LocalCluster> localClusters;
 	cv::Mat result;
 
@@ -30,5 +35,6 @@ private:
 
 	MyGraph localGraph;
 	std::vector<ImageAttribute> allImages;
+	//std::map<cv::Point2f, ImageAttribute> imagePointMapping; 
 };
 
