@@ -147,21 +147,7 @@ void ImageAttribute::calculateObjectness()
 			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
-				//int lowerLeftX = 0;
-				//int lowerLeftXCounter = 0;
-				//int lowerLeftY = 0;
-				//int lowerLeftYcounter = 0;
-				//int upperRightX = 0;
-				//int upperRightXCounter = 0;
-				//int upperRightY = 0;
-				//int upperRightYCounter = 0;
 				int end = objectnessBoundingBox.size() / 40;
-				//if (objectnessBoundingBox.size() > 500) {
-				//	end = 100;
-				//}
-				//else {
-				//	end = objectnessBoundingBox.size();
-				//}
 				cv::Mat clone = image.clone();
 				float avgX = 0;
 				float avgY = 0;
@@ -190,19 +176,15 @@ void ImageAttribute::calculateObjectness()
 					cv::Vec4i bb = salientBoundingBoxes.at(i);
 					if (bb[0] < avgX) {
 						lowerLeftX.push_back(bb[0]);
-						//lowerLeftXCounter++;
 					}
 					if (bb[1] < avgY) {
 						lowerLeftY.push_back(bb[1]);
-						//lowerLeftYcounter++;
 					}
 					if (bb[2] > avgX) {
 						upperRightX.push_back(bb[2]);
-						//upperRightXCounter++;
 					}
 					if (bb[3] > avgY) {
 						upperRightY.push_back(bb[3]);
-						//upperRightYCounter++;
 					}
 					cv::rectangle(clone, cv::Point(bb[0], bb[1]), cv::Point(bb[2], bb[3]), cv::Scalar(0, 0, 255), 4);
 				}
@@ -223,15 +205,15 @@ void ImageAttribute::calculateObjectness()
 				if (finalUpperRightY > image.rows) {
 					finalUpperRightY = image.rows;
 				}
-				std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
+				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
 				croppedImage = image.clone();
 				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
-				cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+				//cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 				/// Display
-				cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
-				cv::imshow(filePath + "BING", clone);
-				cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				cv::imshow(filePath, image);
+				//cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
+				//cv::imshow(filePath + "BING", clone);
+				//cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+				//cv::imshow(filePath, image);
 
 
 			}
@@ -263,8 +245,8 @@ void ImageAttribute::outputHistogram()
 	}
 
 	/// Display
-	cv::namedWindow("calcHist", CV_WINDOW_AUTOSIZE);
-	cv::imshow("calcHist", histImage);
+	//cv::namedWindow("calcHist", CV_WINDOW_AUTOSIZE);
+	//cv::imshow("calcHist", histImage);
 }
 
 int ImageAttribute::getVariance(std::vector<int> values)
@@ -274,22 +256,14 @@ int ImageAttribute::getVariance(std::vector<int> values)
 	for (double a : values)
 		temp += (a - mean)*(a - mean);
 	int result = static_cast<int>(std::sqrt(temp / values.size()));
-	std::cout << result << std::endl;
+	//std::cout << result << std::endl;
 	return result;
-	/*int result;
-	int mean = getMean(values);
-	for (int i = 0; i < values.size(); i++) {
-		result += (values.at(i) - mean) * (values.at(i) - mean);
-	}
-	result = (int)std::sqrt(result / values.size());
-	std::cout << result << std::endl;
-	return result;*/
 }
 
 int ImageAttribute::getMean(std::vector<int> values)
 {
 	int result = static_cast<int>(std::accumulate(values.begin(), values.end(), 0.0) / values.size());
-	std::cout << result << std::endl;
+	//std::cout << result << std::endl;
 	return result;
 }
 
@@ -302,11 +276,6 @@ void ImageAttribute::calculateKeyPoints()
 		surf->detect(greyScale, keypoints);
 		cv::Ptr<cv::xfeatures2d::SurfDescriptorExtractor> extractor = cv::xfeatures2d::SurfFeatureDetector::create();
 		extractor->compute(greyScale, keypoints, descriptor);
-		/*cv::Ptr<cv::xfeatures2d::SIFT> sift = cv::xfeatures2d::SIFT::create();
-		sift->detectAndCompute(greyScale, cv::Mat(), keypoints, descriptor);
-		cv::drawKeypoints(croppedImage, keypoints, croppedImage);
-		cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-		cv::imshow(filePath, croppedImage);*/
 	}
 }
 
