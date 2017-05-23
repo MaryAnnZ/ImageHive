@@ -58,6 +58,9 @@ private:
 	std::vector<cv::Vec4i> objectnessBoundingBox;
 	std::vector<float> objectnessValue;
 
+	int getVariance(std::vector<int> values);
+	int getMean(std::vector<int> values);
+
 	std::vector<cv::KeyPoint> keypoints;
 	cv::Mat descriptor;
 

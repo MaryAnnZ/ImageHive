@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <opencv2\saliency.hpp>
 #include <opencv2\xfeatures2d.hpp>
+#include <numeric>
 
 using namespace std;
 using namespace cv;
@@ -146,22 +147,25 @@ void ImageAttribute::calculateObjectness()
 			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
-				int lowerLeftX = 0;
-				int lowerLeftXCounter = 0;
-				int lowerLeftY = 0;
-				int lowerLeftYcounter = 0;
-				int upperRightX = 0;
-				int upperRightXCounter = 0;
-				int upperRightY = 0;
-				int upperRightYCounter = 0;
-				int end = 0;
-				if (objectnessBoundingBox.size() > 500) {
-					end = 500;
-				}
-				else {
-					end = objectnessBoundingBox.size();
-				}
+				//int lowerLeftX = 0;
+				//int lowerLeftXCounter = 0;
+				//int lowerLeftY = 0;
+				//int lowerLeftYcounter = 0;
+				//int upperRightX = 0;
+				//int upperRightXCounter = 0;
+				//int upperRightY = 0;
+				//int upperRightYCounter = 0;
+				int end = objectnessBoundingBox.size() / 40;
+				//if (objectnessBoundingBox.size() > 500) {
+				//	end = 100;
+				//}
+				//else {
+				//	end = objectnessBoundingBox.size();
+				//}
 				cv::Mat clone = image.clone();
+				float avgX = 0;
+				float avgY = 0;
+				std::vector<cv::Vec4i> salientBoundingBoxes;
 				for (int i = 0; i < end; i++) {
 					float highestObjectnessValue = 0;
 					int index = -1;
@@ -172,36 +176,62 @@ void ImageAttribute::calculateObjectness()
 						}
 					}
 					objectnessValue.at(index) = 0;
-					cv::Vec4i bb = objectnessBoundingBox[index];
-					if (bb[0] < image.cols / 2) {
-						lowerLeftX += bb[0];
-						lowerLeftXCounter++;
+					salientBoundingBoxes.push_back(objectnessBoundingBox[index]);
+					avgX += objectnessBoundingBox[index][0] + objectnessBoundingBox[index][2];
+					avgY += objectnessBoundingBox[index][1] + objectnessBoundingBox[index][3];
+				}
+				avgX = avgX / (2 * end);
+				avgY = avgY / (2 * end);
+				std::vector<int> lowerLeftX;
+				std::vector<int> lowerLeftY;
+				std::vector<int> upperRightX;
+				std::vector<int> upperRightY;
+				for (int i = 0; i < salientBoundingBoxes.size(); i++) {
+					cv::Vec4i bb = salientBoundingBoxes.at(i);
+					if (bb[0] < avgX) {
+						lowerLeftX.push_back(bb[0]);
+						//lowerLeftXCounter++;
 					}
-					if (bb[1] < image.rows / 2) {
-						lowerLeftY += bb[1];
-						lowerLeftYcounter++;
+					if (bb[1] < avgY) {
+						lowerLeftY.push_back(bb[1]);
+						//lowerLeftYcounter++;
 					}
-					if (bb[2] > image.cols / 2) {
-						upperRightX += bb[2];
-						upperRightXCounter++;
+					if (bb[2] > avgX) {
+						upperRightX.push_back(bb[2]);
+						//upperRightXCounter++;
 					}
-					if (bb[3] > image.rows / 2) {
-						upperRightY += bb[3];
-						upperRightYCounter++;
+					if (bb[3] > avgY) {
+						upperRightY.push_back(bb[3]);
+						//upperRightYCounter++;
 					}
 					cv::rectangle(clone, cv::Point(bb[0], bb[1]), cv::Point(bb[2], bb[3]), cv::Scalar(0, 0, 255), 4);
 				}
-				lowerLeftX = lowerLeftX / lowerLeftXCounter;
-				lowerLeftY = lowerLeftY / lowerLeftYcounter;
-				upperRightX = upperRightX / upperRightXCounter;
-				upperRightY = upperRightY / upperRightYCounter;
-				//std::cout << lowerLeftX << "; " << lowerLeftY << "; " << upperRightX << "; " << upperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
+
+				int finalLowerLeftX = getMean(lowerLeftX) - getVariance(lowerLeftX);
+				if (finalLowerLeftX < 0) {
+					finalLowerLeftX = 0;
+				}
+				int finalLowerLeftY = getMean(lowerLeftY) - getVariance(lowerLeftY);
+				if (finalLowerLeftY < 0) {
+					finalLowerLeftY = 0;
+				}
+				int finalUpperRightX = getMean(upperRightX) + getVariance(upperRightX);
+				if (finalUpperRightX > image.cols) {
+					finalUpperRightX = image.cols;
+				}
+				int finalUpperRightY = getMean(upperRightY) + getVariance(upperRightY);
+				if (finalUpperRightY > image.rows) {
+					finalUpperRightY = image.rows;
+				}
+				std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
 				croppedImage = image.clone();
-				croppedImage = croppedImage(cv::Rect(lowerLeftX, lowerLeftY, upperRightX - lowerLeftX, upperRightY - lowerLeftY));
-				cv::rectangle(image, cv::Point(lowerLeftX, lowerLeftY), cv::Point(upperRightX, upperRightY), cv::Scalar(0, 0, 255), 4);
+				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+				cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 				/// Display
-				/*cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				cv::imshow(filePath, croppedImage);*/
+				cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
+				cv::imshow(filePath + "BING", clone);
+				cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+				cv::imshow(filePath, image);
 
 
 			}
@@ -235,6 +265,32 @@ void ImageAttribute::outputHistogram()
 	/// Display
 	cv::namedWindow("calcHist", CV_WINDOW_AUTOSIZE);
 	cv::imshow("calcHist", histImage);
+}
+
+int ImageAttribute::getVariance(std::vector<int> values)
+{
+	double mean = getMean(values);
+	double temp = 0;
+	for (double a : values)
+		temp += (a - mean)*(a - mean);
+	int result = static_cast<int>(std::sqrt(temp / values.size()));
+	std::cout << result << std::endl;
+	return result;
+	/*int result;
+	int mean = getMean(values);
+	for (int i = 0; i < values.size(); i++) {
+		result += (values.at(i) - mean) * (values.at(i) - mean);
+	}
+	result = (int)std::sqrt(result / values.size());
+	std::cout << result << std::endl;
+	return result;*/
+}
+
+int ImageAttribute::getMean(std::vector<int> values)
+{
+	int result = static_cast<int>(std::accumulate(values.begin(), values.end(), 0.0) / values.size());
+	std::cout << result << std::endl;
+	return result;
 }
 
 void ImageAttribute::calculateKeyPoints()
