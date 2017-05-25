@@ -4,16 +4,6 @@
 //#include <opencv2\opencv_modules.hpp>
 
 
-MyGraph::MyGraph()
-{
-	amountClasses = 0;
-}
-
-
-MyGraph::~MyGraph()
-{
-}
-
 void MyGraph::buildGraph(std::vector<ImageAttribute> all) {
 	for (int i = 0; i < all.size(); i++) {
 		ImageAttribute currentIA = all[i];
@@ -171,7 +161,7 @@ void MyGraph::compareSift()
 					}
 					int goodMatchCounter = 0;
 					for (int m = 0; m < it->second.at(i).img.getDescriptor().rows; m++) {
-						if (matches[m].distance <= cv::max(2*minDist, 0.02)) {
+						if (matches[m].distance <= max(2*minDist, 0.02)) {
 							goodMatchCounter++;
 						}
 					}

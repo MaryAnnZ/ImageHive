@@ -1,84 +1,48 @@
 #include "Voronoi.h"
 
-void Voronoi::Make(cv::Mat* bmp, std::vector<cv::Point2f> points,bool test) {
-	bmp_ = bmp;
-	//CreateColors();
-	
-	points_ = points;
 
-	SetSitesPoints();
-	CreateSites(points);
-}
 
-void Voronoi::Make(cv::Mat* bmp, std::vector<cv::Point2f> points) {
-	bmp_ = bmp;
-	points_ = points;
-	CreateColors();
-	CreateSites();
-	SetSitesPoints();
-}
+std::vector<std::pair<cv::Point, cv::Point>> Voronoi::getAllVoronoiEdges(std::vector<cv::Point> all, int width, int height)
+{
 
-void Voronoi::CreateSites(std::vector<cv::Point2f> points_) {
-	for (const auto& point : points_) {
-		int x = point.x, y = point.y;
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				cv::floodFill(*bmp_, point, 255, (cv::Rect*)0, cv::Scalar(), 200);
-			}
-		}
+	std::vector<std::pair<cv::Point, cv::Point>> result;
+
+	jcv_point* points = 0;
+	points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)all.size());
+	int pointoffset = 5; // move the points inwards, for aestetic reasons
+	srand(0);
+
+	for (int i = 0; i < all.size(); ++i)
+	{
+		points[i].x = (float)(pointoffset + rand() % (width - 2 * pointoffset));
+		points[i].y = (float)(pointoffset + rand() % (height - 2 * pointoffset));
+	}
+
+	jcv_diagram voronoi;
+	jcv_rect* rect = 0;
+	jcv_diagram_generate(all.size(), (const jcv_point*)points, (const jcv_rect*)rect, &voronoi);
+
+	jcv_point dimensions;
+	dimensions.x = (jcv_real)width;
+	dimensions.y = (jcv_real)height;
+
+	const jcv_edge* edge = jcv_diagram_get_edges(&voronoi);
+	while (edge)
+	{
+		jcv_point p0 = recalcPoint(&edge->pos[0], &voronoi.min, &voronoi.max, &dimensions);
+		jcv_point p1 = recalcPoint(&edge->pos[1], &voronoi.min, &voronoi.max, &dimensions);
+
+		result.push_back(std::pair<cv::Point, cv::Point>(cv::Point(p0.x, p0.y), cv::Point(p1.x, p1.y)));
+		edge = edge->next;
 	}
 }
 
-void Voronoi::CreateSites() {
-	int w = bmp_->size().width, h = bmp_->size().height, d;
-	for (int hh = 0; hh < h; hh++) {
-		for (int ww = 0; ww < w; ww++) {
-			int ind = -1, dist = INT_MAX;
-			for (size_t it = 0; it < points_.size(); it++) {
-				cv::Point2f p = points_[it];
-				d = DistanceSqrd(p, ww, hh);
-				if (d < dist) {
-					dist = d;
-					ind = it;
-				}
-			}
 
-			if (ind > -1)
-			{
-				// set pixel
-				bmp_->at<cv::Vec3b>(cv::Point(ww, hh)) = colors_[ind];
-				//SetPixel(bmp_->hdc(), ww, hh, colors_[ind]);
-			}
-		}
-	}
+// Remaps the point from the input space to image space
+jcv_point Voronoi::recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point* max, const jcv_point* scale)
+{
+	jcv_point p;
+	p.x = (pt->x - min->x) / (max->x - min->x) * scale->x;
+	p.y = (pt->y - min->y) / (max->y - min->y) * scale->y;
+	return p;
 }
-
-void Voronoi::SetSitesPoints() {
-	for (const auto& point : points_) {
-		int x = point.x, y = point.y;
-		for (int i = -1; i < 2; i++)
-			for (int j = -1; j < 2; j++)
-				bmp_->at<cv::Vec3b>(cv::Point(x + i, y + j)) = 0;
-	}
-}
-
-void Voronoi::CreateColors() {
-	for (size_t i = 0; i < points_.size(); i++) {
-		cv::Vec3b color;
-		color[0] = rand() & 255;
-		color[1] = rand() & 255;
-		color[2] = rand() & 255;
-
-		colors_.push_back(color);
-	}
-}
-
-int Voronoi::DistanceSqrd(cv::Point2f point, int x, int y) {
-	int xd = x - point.x;
-	int yd = y - point.y;
-
-	return abs(xd) + abs(yd);
-	//Math.abs(x1 - x2) + Math.abs(y1 - y2);
-	//return (xd * xd) + (yd * yd);
-}
-

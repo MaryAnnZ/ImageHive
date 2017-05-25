@@ -1,40 +1,45 @@
-#pragma once
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-#include "ImageAttributes.h"
+#include "Utils.h"
 #include "LocalCluster.h"
 #include "MyGraph.h"
 #include <iostream>
 
+
 class Cluster
 {
 public:
+
 	Cluster(std::vector<ImageAttribute> all);
-	~Cluster();
-	Cluster();
+	~Cluster() {};
+	Cluster() {};
 		
-	void addLocalCluster(ImageAttribute image, cv::Point2f pivot, int height, int width);
-	void setResult(cv::Mat resultImage) { result = resultImage; };
+	void addLocalCluster(ImageAttribute image, cv::Point pivot, int height, int width);
+	
+	void setGlobalPos(int width, int height);
 	void createLocalGraph();
 
-	std::vector<cv::Point2f> getAllLocalPivots() {return allLocalPoints;};
+	std::vector<cv::Point> getAllLocalPivots() { return allLocalPoints; };
+	void setResult(cv::Mat resultImage) { result = resultImage; };
 	cv::Mat getResult() { return result; };
-	cv::Point2f getPivot() { return pivot; };
+
+	cv::Point getPivot() { return pivot; };
+	cv::Point setPivot(cv::Point piv) { pivot = piv; };
 	
-	//std::map<cv::Point2f, ImageAttribute> getImagePointMapping() { return imagePointMapping; };
+	//std::map<cv::Point, ImageAttribute> getImagePointMapping() { return imagePointMapping; };
 
 private:
-	void updateClusterPivot();
 
-	std::vector<cv::Point2f> allLocalPoints;
+	std::vector<cv::Point> allLocalPoints;
 	std::vector<LocalCluster> localClusters;
 	cv::Mat result;
 
-	cv::Point2f pivot;
+	cv::Point pivot;
 
 	MyGraph localGraph;
 	std::vector<ImageAttribute> allImages;
-	//std::map<cv::Point2f, ImageAttribute> imagePointMapping; 
+	//std::map<cv::Point, ImageAttribute> imagePointMapping; 
 };
+
+
+
+
 

@@ -12,8 +12,8 @@ public:
 		ImageAttribute neighborImg;
 	};
 
-	MyGraph();
-	~MyGraph();
+	MyGraph() {};
+	~MyGraph() {};
 
 	void buildGraph(std::vector<ImageAttribute> all);
 
@@ -35,7 +35,7 @@ private:
 
 	void checkConnection(std::vector<MyEdge> connectedEdges, std::vector<MyEdge> neighboringEdges);
 
-	int amountClasses;
+	int amountClasses = 0;
 	std::map<int, std::vector<MyEdge>> classes;
 	std::map<int, std::vector<SiftImg>> classesImg;
 

@@ -1,16 +1,17 @@
 #include "LocalCluster.h"
 
-LocalCluster::~LocalCluster()
-{
-
-
-}
-
-LocalCluster::LocalCluster(ImageAttribute img, cv::Point2f position, int height, int width)
+LocalCluster::LocalCluster(ImageAttribute img, cv::Point localPos, int height, int width)
 {
 	image = img;
-	pivot = position;
+	localPivot = localPos;
 
 	cellHeight = height;
 	cellWidth = width;
+}
+
+cv::Point LocalCluster::setGlobalPivot(int width, int height) {
+
+	globalPivot = cv::Point(localPivot.x + width, localPivot.y + height);
+
+	return cv::Point(globalPivot.x, globalPivot.y);
 }

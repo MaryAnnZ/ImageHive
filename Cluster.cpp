@@ -5,45 +5,18 @@ Cluster::Cluster(std::vector<ImageAttribute> all)
 	allImages = all;
 }
 
-
-Cluster::~Cluster()
-{
-
-
-}
-
-Cluster::Cluster()
-{
-
-
-}
-
-void Cluster::addLocalCluster(ImageAttribute image, cv::Point2f pivot, int height, int width) {
-
-	LocalCluster currentLocal(image, pivot, height, width);
-
-	localClusters.push_back(currentLocal);
-	allLocalPoints.push_back(pivot);
-
-	//imagePointMapping[pivot]= image;
-
-	updateClusterPivot();
-}
-
-void Cluster::updateClusterPivot() {
-
-	int x=0;
-	int y=0; 
-
-	for each(LocalCluster clus in localClusters) {
-		x += clus.getPivot().x;
-		y += clus.getPivot().y;
+void Cluster::setGlobalPos(int width, int height) {
+	for each (LocalCluster clus in localClusters) {
+		cv::Point tmp = clus.setGlobalPivot(width, height);
+		allLocalPoints.push_back(tmp);
 	}
+}
 
-	x /= localClusters.size();
-	y /= localClusters.size();
 
-	pivot = cv::Point2f(x, y);
+void Cluster::addLocalCluster(ImageAttribute image, cv::Point locaPos, int height, int width) {
+	LocalCluster currentLocal(image, locaPos, height, width);
+	localClusters.push_back(currentLocal);
+	
 }
 
 

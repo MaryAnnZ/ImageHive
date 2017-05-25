@@ -1,21 +1,24 @@
 #pragma once
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
+#include "Utils.h"
 #include "ImageAttributes.h"
 
-	class LocalCluster
-	{
-	public:
-		~LocalCluster();
-		LocalCluster(ImageAttribute img, cv::Point2f pivot, int height, int width);
+class LocalCluster
+{
+public:
+	~LocalCluster() {};
+		LocalCluster(ImageAttribute img, cv::Point localPiv, int height, int width);
 		
-		cv::Point2f getPivot() { return pivot; };
+		cv::Point getLocalPivot() { return localPivot; };
 
+		cv::Point getGlobalPivot() { return globalPivot; };
+		cv::Point setGlobalPivot(int width, int height);
 
 	private:
 		int cellHeight;
 		int cellWidth;
-		cv::Point2f pivot;
+
+		cv::Point localPivot;
+		cv::Point globalPivot;
 
 		ImageAttribute image;
 

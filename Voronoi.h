@@ -1,29 +1,19 @@
-#pragma once
-#include "opencv2/imgproc.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/highgui.hpp"
-#include <cmath> 
-#include "ImageAttributes.h"
+#include <cmath>
+#include "jc_voronoi.h"
+#include "Utils.h"
 
 class Voronoi {
 public:
+
+	std::vector<std::pair<cv::Point, cv::Point>> Voronoi::getAllVoronoiEdges(std::vector<cv::Point> all, int width, int height);
+
 	Voronoi() {};
 	~Voronoi() {};
 
-	void Voronoi::Make(cv::Mat* bmp, std::vector<cv::Point2f> points, bool test);
-	void Make(cv::Mat* bmp, std::vector<cv::Point2f> points);
 
 private:
-	void CreateSites();
-	void CreateSites(std::vector<cv::Point2f> points_);
-	void SetSitesPoints();
 	
-	void CreateColors();
-	int DistanceSqrd(cv::Point2f point, int x, int y);
+	jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point* max, const jcv_point* scale);
 
-	std::vector<cv::Point2f> points_;
-	std::vector<cv::Vec3b> colors_;
-	cv::Mat* bmp_;
 };
 

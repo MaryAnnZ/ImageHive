@@ -42,10 +42,10 @@
     <ClCompile Include="LocalCluster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cvt.cpp">
+    <ClCompile Include="Voronoi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Voronoi.cpp">
+    <ClCompile Include="GraphLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,10 +77,16 @@
     <ClInclude Include="LocalCluster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cvt.hpp">
+    <ClInclude Include="Voronoi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Voronoi.h">
+    <ClInclude Include="GraphLayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageHive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
