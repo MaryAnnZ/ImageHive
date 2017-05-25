@@ -208,7 +208,7 @@ int MyGraph::getSiftMatches(ImageAttribute image, ImageAttribute compareWith)
 	flannMatcher.match(image.getDescriptor(), compareWith.getDescriptor(), matches);
 	double maxDist = 0;
 	double minDist = 100;
-	for (int m = 0; m < image.getDescriptor().rows; m++) {
+	for (int m = 0; m < matches.size(); m++) {
 		double dist = matches.at(m).distance;
 		if (dist < minDist) {
 			minDist = dist;
@@ -218,10 +218,16 @@ int MyGraph::getSiftMatches(ImageAttribute image, ImageAttribute compareWith)
 		}
 	}
 	int goodMatchCounter = 0;
-	for (int m = 0; m < image.getDescriptor().rows; m++) {
-		if (matches[m].distance <= cv::max(2 * minDist, 0.02)) {
+	float diffDist = std::abs(maxDist - minDist);
+	for (int m = 0; m < matches.size(); m++) {
+		if (matches[m].distance <= (minDist + (diffDist / 4))) {
 			goodMatchCounter++;
 		}
+	}
+	//std::cout << "minDist " << minDist << ", maxDist: " << maxDist << std::endl;
+	//std::cout << "good Matc Counter: " << goodMatchCounter << ". maxMatches: " << matches.size() << std::endl;
+	if (goodMatchCounter < matches.size() / 4) {
+		goodMatchCounter = 0;
 	}
 	return goodMatchCounter;
 }
