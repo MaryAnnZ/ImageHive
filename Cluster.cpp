@@ -30,7 +30,7 @@ void Cluster::createLocalGraph() {
 	localGraph.buildGraph(allImages);
 	localGraph.doClustering(allImages.size());
 	localGraph.classesToString();
-	localGraph.compareSift();
+	localGraph.compareSiftForNeighborhood();
 	localGraph.IAclassesToString();
 }
 

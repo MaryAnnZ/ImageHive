@@ -25,7 +25,7 @@ public:
 	void classesToString();
 	void IAclassesToString();
 
-	void compareSift();
+	void compareSiftForNeighborhood();
 
 	
 private:
@@ -40,6 +40,7 @@ private:
 	std::map<int, std::vector<SiftImg>> classesImg;
 
 	void writeIAclasses();
+	int getSiftMatches(ImageAttribute image, ImageAttribute compareWith);
 
 };
 

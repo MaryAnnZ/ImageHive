@@ -34,7 +34,7 @@ int main()
 
 	graph.doClustering(allImages.size());
 	graph.classesToString();
-	graph.compareSift();
+	graph.compareSiftForNeighborhood();
 	graph.IAclassesToString();
 
 	std::vector<Cluster> allClusters = doLocalClusters(allImages,graph.getClasses(),graph.getLocalClasses(),result);

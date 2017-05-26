@@ -11,28 +11,37 @@ void MyGraph::buildGraph(std::vector<ImageAttribute> all) {
 		std::vector<float> hogCorr;
 		float maxHog = -1;
 		std::vector<float> histCorr;
+		int maxSiftMatch = -1;
+		std::vector<int> siftCorr;
 		for (int j = 0; j < all.size(); j++) {
-			//small corr; big no corr -->normalize
-			float corrHog = currentIA.compareHOGvalue(all.at(j).getHOGvalues());
-			// 1 -> corr; 0 -> no corr;
-			float corrHist = currentIA.compareHist(all.at(j).getColorHis());
-			hogCorr.push_back(corrHog);
-			if (corrHog > maxHog) {
-				maxHog = corrHog;
-			}
-			histCorr.push_back(1 - corrHist);
-
+				//small corr; big no corr -->normalize
+				float corrHog = currentIA.compareHOGvalue(all.at(j).getHOGvalues());
+				hogCorr.push_back(corrHog);
+				if (corrHog > maxHog) {
+					maxHog = corrHog;
+				}
+				// 1 -> corr; 0 -> no corr;
+				float corrHist = currentIA.compareHist(all.at(j).getColorHis());
+				histCorr.push_back(1 - corrHist);
+				int corrSift = getSiftMatches(currentIA, all.at(j));
+				siftCorr.push_back(corrSift);
+				if (corrSift > maxSiftMatch) {
+					maxSiftMatch = corrSift;
+				}
+			
 		}
 		std::cout << "comparing " << all.at(i).getPath() << std::endl;
 		for (int k = 0; k < histCorr.size(); k++) {
 			//normalize HOG
 
 			float hogValue = hogCorr.at(k) / maxHog;
-			
+			float siftValue = (float)siftCorr.at(k) / (float)maxSiftMatch;
+			siftValue = 1.0 - siftValue;
 			if (i != k) { //no edges with the same start and end vertex
-				createEdge(all.at(i), all.at(k), hogValue + histCorr.at(k)); //if weight==2 no corr, weight == 0 is the same
+				//createEdge(all.at(i), all.at(k), siftValue);
+				createEdge(all.at(i), all.at(k), hogValue + histCorr.at(k) + siftValue); //if weight==3 no corr, weight == 0 is the same
 				std::cout << " with " << all.at(k).getPath() << std::endl;
-				std::cout << "value: " << hogValue + histCorr.at(k) << std::endl;
+				std::cout << "value: " << hogValue + histCorr.at(k)  + siftValue<< std::endl;
 			}
 		}
 		std::cout << "*****************" << std::endl;
@@ -122,7 +131,7 @@ void MyGraph::classesToString()
 
 void MyGraph::IAclassesToString()
 {
-	std::cout << "#######################################" << std::endl;
+	std::cout << "()()()()()()()()()()()()()()()()()()()()()()()()()" << std::endl;
 	typedef std::map<int, std::vector<SiftImg>>::iterator itType;
 	for (itType it = classesImg.begin(); it != classesImg.end(); it++) {
 		std::cout << "Class " << it->first << " +++++++++++++++++++++" << std::endl;
@@ -131,10 +140,10 @@ void MyGraph::IAclassesToString()
 			std::cout << "Neighbor: " << it->second.at(i).neighborImg.getPath() << std::endl;
 		}
 	}
-	std::cout << "#######################################" << std::endl;
+	std::cout << "()()()()()()()()()()()()()()()()()()()()()()()()()" << std::endl;
 }
 
-void MyGraph::compareSift()
+void MyGraph::compareSiftForNeighborhood()
 {
 	cv::FlannBasedMatcher flannMatcher;// = cv::BFMatcher();
 	typedef std::map<int, std::vector<SiftImg>>::iterator itType;
@@ -151,7 +160,7 @@ void MyGraph::compareSift()
 					double maxDist = 0;
 					double minDist = 100;
 					for (int m = 0; m < it->second.at(i).img.getDescriptor().rows; m++) {
-						double dist = matches.at(i).distance;
+						double dist = matches.at(m).distance;
 						if (dist < minDist) {
 							minDist = dist;
 						}
@@ -180,6 +189,37 @@ void MyGraph::compareSift()
 		}
 	}
 	IAclassesToString();
+}
+
+int MyGraph::getSiftMatches(ImageAttribute image, ImageAttribute compareWith)
+{
+	cv::FlannBasedMatcher flannMatcher;// = cv::BFMatcher();
+	std::vector<cv::DMatch> matches;
+	flannMatcher.match(image.getDescriptor(), compareWith.getDescriptor(), matches);
+	double maxDist = 0;
+	double minDist = 100;
+	for (int m = 0; m < matches.size(); m++) {
+		double dist = matches.at(m).distance;
+		if (dist < minDist) {
+			minDist = dist;
+		}
+		if (dist > maxDist) {
+			maxDist = dist;
+		}
+	}
+	int goodMatchCounter = 0;
+	float diffDist = std::abs(maxDist - minDist);
+	for (int m = 0; m < matches.size(); m++) {
+		if (matches[m].distance <= (minDist + (diffDist / 4))) {
+			goodMatchCounter++;
+		}
+	}
+	//std::cout << "minDist " << minDist << ", maxDist: " << maxDist << std::endl;
+	//std::cout << "good Matc Counter: " << goodMatchCounter << ". maxMatches: " << matches.size() << std::endl;
+	if (goodMatchCounter < matches.size() / 4) {
+		goodMatchCounter = 0;
+	}
+	return goodMatchCounter;
 }
 
 void MyGraph::checkConnection(std::vector<MyEdge> connectedEdges, std::vector<MyEdge> neighboringEdges)
