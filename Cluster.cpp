@@ -6,18 +6,32 @@ Cluster::Cluster(std::vector<ImageAttribute> all)
 }
 
 void Cluster::setGlobalPos(int width, int height) {
-	for each (LocalCluster clus in localClusters) {
-		cv::Point tmp = clus.setGlobalPivot(width, height);
-		allLocalPoints.push_back(tmp);
+
+	for (int i = 0;i < allLocalClusters.size();i++) {
+		allLocalClusters[i]->globalPivot.x += width;
+		allLocalClusters[i]->globalPivot.y += height;
 	}
+
+}
+
+cv::Point Cluster::getGlobalClusterLoc() {
+
+	int xPos = 0;
+	int yPos = 0;
+
+	for (int i = 0;i < allLocalClusters.size();i++) {
+		xPos += allLocalClusters[i]->globalPivot.x;
+		yPos += allLocalClusters[i]->globalPivot.y;
+	}
+
+	return cv::Point(xPos / allLocalClusters.size(), yPos / allLocalClusters.size());
 }
 
 
 void Cluster::addLocalCluster(ImageAttribute image, cv::Point locaPos, int height, int width) {
-	LocalCluster currentLocal(image, locaPos, height, width);
-	localClusters.push_back(currentLocal);
-	
+	allLocalClusters.push_back((new LocalCluster(image, locaPos, height, width)));
 }
+
 
 
 void Cluster::createLocalGraph() {

@@ -16,20 +16,19 @@ public:
 	
 	void setGlobalPos(int width, int height);
 	void createLocalGraph();
-
-	std::vector<cv::Point> getAllLocalPivots() { return allLocalPoints; };
+	
 	void setResult(cv::Mat resultImage) { result = resultImage; };
 	cv::Mat getResult() { return result; };
 
 	cv::Point getPivot() { return pivot; };
 	cv::Point setPivot(cv::Point piv) { pivot = piv; };
 
-	std::vector<LocalCluster> getAllLocalClusters() {return localClusters;};
+	cv::Point getGlobalClusterLoc();
+
+	std::vector<LocalCluster*> allLocalClusters;
+
 
 private:
-
-	std::vector<cv::Point> allLocalPoints;
-	std::vector<LocalCluster> localClusters;
 	cv::Mat result;
 
 	cv::Point pivot;
