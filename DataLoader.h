@@ -1,11 +1,5 @@
 #pragma once
-#include "stdafx.h"
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <iostream>
-#include <Windows.h>
-#include <shlobj.h>
-#include <cstdio>
+#include "Utils.h"
 
 class DataLoader
 {

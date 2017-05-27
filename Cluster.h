@@ -23,8 +23,8 @@ public:
 
 	cv::Point getPivot() { return pivot; };
 	cv::Point setPivot(cv::Point piv) { pivot = piv; };
-	
-	//std::map<cv::Point, ImageAttribute> getImagePointMapping() { return imagePointMapping; };
+
+	std::vector<LocalCluster> getAllLocalClusters() {return localClusters;};
 
 private:
 
