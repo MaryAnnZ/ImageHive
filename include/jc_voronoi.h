@@ -296,18 +296,17 @@ static inline int jcv_point_on_edge( const jcv_point* pt, const jcv_point* min, 
 	return pt->x == min->x || pt->y == min->y || pt->x == max->x || pt->y == max->y;
 }
 
-static inline jcv_real jcv_point_dist_sq( const jcv_point* pt1, const jcv_point* pt2)
-{
-    jcv_real diffx = pt1->x - pt2->x;
-    jcv_real diffy = pt1->y - pt2->y;
-    return diffx * diffx + diffy * diffy;
-}
-
 static inline jcv_real jcv_point_dist( const jcv_point* pt1, const jcv_point* pt2 )
 {
+	//abs(x1 - x2) + abs(y1 - y2);
+
 	jcv_real dx = pt1->x - pt2->x;
 	jcv_real dy = pt1->y - pt2->y;
-	return (jcv_real)(JCV_SQRT(dx*dx + dy*dy));
+	return (jcv_real)(JCV_FABS(dx) + JCV_FABS(dy));
+
+	//jcv_real dx = pt1->x - pt2->x;
+	//jcv_real dy = pt1->y - pt2->y;
+	//return (jcv_real)(JCV_SQRT(dx*dx + dy*dy));
 }
 
 // Structs

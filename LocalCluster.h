@@ -7,20 +7,20 @@ public:
 	
 	LocalCluster() {};
 	~LocalCluster() {};
-		LocalCluster(ImageAttribute img, cv::Point localPiv, int height, int width);
+		LocalCluster(ImageAttribute img, cv::Point globalPivot, int height, int width, cv::Point position);
 		
 		std::vector<cv::Point> globalPolygonVertices;
 		std::vector<std::pair<cv::Point, cv::Point>> globalPolygonEdges;
 
-		cv::Point localPivot;
 		cv::Point globalPivot;
 
-
+		cv::Point position;
 		ImageAttribute image;
 		
-	private:
 		int cellHeight;
 		int cellWidth;
+
+
 	};
 
 
