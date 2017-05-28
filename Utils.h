@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <iostream>
 #include <map>
+#include <stack>
 
 const int RESULT_HEIGHT = 600;
 const int RESULT_WIDTH = 900;
