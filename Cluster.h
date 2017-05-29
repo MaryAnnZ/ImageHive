@@ -22,7 +22,6 @@ public:
 	std::vector<std::pair<cv::Point, cv::Point>> polygonEdges;
 	void calculatedBoundingBox();
 
-	bool isInside(cv::Point p);
 
 	cv::Point pivot;
 	cv::Point position;
@@ -38,9 +37,7 @@ public:
 	std::vector<cv::Point> boundingVertices;
 
 private:
-	bool doIntersect(cv::Point p1, cv::Point q1, cv::Point p2, cv::Point q2);
-	bool onSegment(cv::Point p, cv::Point q, cv::Point r);
-	int orientation(cv::Point p, cv::Point q, cv::Point r);
+	
 
 	MyGraph localGraph;
 

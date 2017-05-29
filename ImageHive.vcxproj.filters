@@ -42,7 +42,7 @@
     <ClCompile Include="LocalCluster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphLayout.cpp">
+    <ClCompile Include="IntersectionHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,13 +74,13 @@
     <ClInclude Include="LocalCluster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphLayout.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ImageHive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntersectionHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

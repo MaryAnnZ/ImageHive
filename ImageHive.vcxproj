@@ -134,9 +134,9 @@
   <ItemGroup>
     <ClCompile Include="Cluster.cpp" />
     <ClCompile Include="DataLoader.cpp" />
-    <ClCompile Include="GraphLayout.cpp" />
     <ClCompile Include="ImageAttributes.cpp" />
     <ClCompile Include="ImageHive.cpp" />
+    <ClCompile Include="IntersectionHelper.cpp" />
     <ClCompile Include="LocalCluster.cpp" />
     <ClCompile Include="MyGraph.cpp" />
     <ClCompile Include="MyEdge.cpp" />
@@ -146,9 +146,9 @@
   <ItemGroup>
     <ClInclude Include="Cluster.h" />
     <ClInclude Include="DataLoader.h" />
-    <ClInclude Include="GraphLayout.h" />
     <ClInclude Include="ImageAttributes.h" />
     <ClInclude Include="ImageHive.h" />
+    <ClInclude Include="IntersectionHelper.h" />
     <ClInclude Include="LocalCluster.h" />
     <ClInclude Include="MyGraph.h" />
     <ClInclude Include="MyEdge.h" />

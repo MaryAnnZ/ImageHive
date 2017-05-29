@@ -5,6 +5,7 @@
 #include "Cluster.h"
 #include "ResultImage.h"
 #include "MyGraph.h"
+#include "IntersectionHelper.h"
 
 using namespace cv;
 using namespace std;
@@ -30,7 +31,7 @@ jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point
 jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point* max, int width, int height);
 
 //Filling
-void floodFill(Mat src, Mat out, Mat colorSrc, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight);
+void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVertices, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight);
 
 //Helper
 void drawBoundingBox(cv::Mat cells, Cluster* clus, Scalar col);

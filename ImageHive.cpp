@@ -44,7 +44,7 @@ int main()
 	
 	allClusters = doLocalVoronoi(allClusters, result);
 		
-	doGLobalVoronoiWithLocalClusters(allClusters, result);
+	//doGLobalVoronoiWithLocalClusters(allClusters, result);
 
 	cvWaitKey(0);
 	return 0;
@@ -365,6 +365,7 @@ std::vector<Cluster*> doLocalVoronoi(std::vector<Cluster*> allclusters, ResultIm
 					cv::Mat tmp = allclusters[clus]->allLocalClusters[Lclus]->getSaliencyCroppedImage();
 					floodFill(cells, ouput,
 						tmp,
+						allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices,
 						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.x,
 						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.y,
 						tmp.size().width / 2,
@@ -566,7 +567,7 @@ void calcGLobalWithLocalVoronoi(std::vector<cv::Point> all, std::vector<LocalClu
 
 
 	Mat output = Mat::zeros(global.size().height, global.size().width, CV_8UC3);
-	output.setTo(Scalar(0, 0, 0));
+	output.setTo(Scalar(1, 2, 0));
 
 	for (int i = 0; i < 1000; ++i)
 	{
@@ -589,6 +590,8 @@ void calcGLobalWithLocalVoronoi(std::vector<cv::Point> all, std::vector<LocalClu
 	{
 		const jcv_site* site = &sites2[i];
 
+		std::vector<cv::Point> polygonVertices;
+
 		const jcv_graphedge* e = site->edges;
 		while (e)
 		{
@@ -599,18 +602,24 @@ void calcGLobalWithLocalVoronoi(std::vector<cv::Point> all, std::vector<LocalClu
 			cv::line(global, Point(p0.x, p0.y), Point(p1.x, p1.y), Scalar(255, 0, 0), 3, 7, 0);
 			cv::line(boundarySrc, Point(p0.x, p0.y), Point(p1.x, p1.y), Scalar(255, 255, 255), 3, 8, 0);
 
-			cv::Mat tmp = map[i]->getSaliencyCroppedImage();
-			floodFill(boundarySrc, output, tmp,
-				map[i]->globalPivot.x,
-				map[i]->globalPivot.y,
-				tmp.size().width / 2,
-				tmp.size().height / 2,
-				tmp.size().width,
-				tmp.size().height);
+			polygonVertices.push_back(Point(p0.x, p0.y));
 
 			e = e->next;
 		}
 
+
+		cv::Mat tmp = map[i]->getImage();
+		floodFill(boundarySrc, output, tmp, polygonVertices,
+			points[i].x,
+			points[i].y,
+			tmp.size().width / 2,
+			tmp.size().height / 2,
+			tmp.size().width,
+			tmp.size().height);
+
+		cv::circle(boundarySrc, cv::Point(points[i].x, points[i].y),3 , Scalar(0, 0, 0), 3, 8, 0);
+
+		polygonVertices.clear();
 	}
 
 
@@ -672,7 +681,17 @@ void relax_points(const jcv_diagram* diagram, jcv_point* points)
 }
 
 
-void floodFill(Mat src, Mat out, Mat colorSrc, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight) {
+void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVertices, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight) {
+
+	IntersectionHelper helper;
+
+	std::vector<float> polyX;
+	std::vector<float> polyY;
+	for each (cv::Point p in polygonVertices) {
+		polyX.push_back(p.x);
+		polyY.push_back(p.y);
+	}
+
 
 	std::stack<std::pair<cv::Point, cv::Point>> stack;
 	stack.push(std::pair<cv::Point, cv::Point>(Point(pointx, pointy), Point(srcX, srcY)));
@@ -697,11 +716,23 @@ void floodFill(Mat src, Mat out, Mat colorSrc, int pointx, int pointy, int srcX,
 			newsrcY < (srcHeight - 1) && newsrcX < (srcWidth - 1))
 			 {
 			if (src.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255) &&
-				out.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 0)) {
+				out.at<Vec3b>(newPointy, newPointX) == Vec3b(1, 2, 0)) {
 
 				Vec3b newIntensity = colorSrc.at<Vec3b>(newsrcY, newsrcX);
-				out.at<Vec3b>(newPointy, newPointX) = newIntensity;
-				src.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 255, 0);
+
+				if (helper.pointInPolygon(polygonVertices.size(), polyX, polyY, (float)newPointX, (float)newPointy)) {
+					out.at<Vec3b>(newPointy, newPointX) = newIntensity;
+				}
+				else {
+					int first = (newIntensity.val[0] + out.at<Vec3b>(newPointy, newPointX).val[0])/2;
+					int second = (newIntensity.val[1] + out.at<Vec3b>(newPointy, newPointX).val[1])/2;
+					int third = (newIntensity.val[2] + out.at<Vec3b>(newPointy, newPointX).val[2])/2;
+
+					out.at<Vec3b>(newPointy, newPointX) = Vec3b(first, second, third);
+				}
+
+
+				src.at<Vec3b>(newPointy, newPointX) = Vec3b(0, 255, 0);
 
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX + 1, newPointy), Point(newsrcX + 1, newsrcY)));
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX - 1, newPointy), Point(newsrcX - 1, newsrcY)));

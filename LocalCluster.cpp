@@ -65,3 +65,4 @@ cv::Mat LocalCluster::getSaliencyCroppedImage() {
 	}
 		return resizedImage;	
 }
+
