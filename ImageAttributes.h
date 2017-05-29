@@ -100,7 +100,10 @@ public:
 	*Gibt die Koordinaten des inneren salienten Bereich zurück
 	*/
 	std::vector<int> getCropped2Coords() { return cropped2Coords; }
-
+	/*
+	*Gibt das resized Bild zurück
+	*/
+	cv::Mat getResizedImage() { return resizedImage; }
 private:
 	/**
 	*Das Originalbild
@@ -172,6 +175,9 @@ private:
 	*lowerLeftX; lowerLeftY; upperRightX; upperRightY
 	*/
 	std::vector<int> cropped2Coords;
-
+	/**
+	*das resized Bild
+	*/
+	cv::Mat resizedImage;
 };
 
