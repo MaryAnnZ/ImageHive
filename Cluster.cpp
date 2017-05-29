@@ -138,7 +138,7 @@ int Cluster::orientation(cv::Point p, cv::Point q, cv::Point r)
 
 void Cluster::createLocalGraph() {
 
-	std::cout << "*****************" << std::endl;
+	/*std::cout << "*****************" << std::endl;
 	std::cout << "LOCAL" << std::endl;
 	std::cout << "*****************" << std::endl;
 	localGraph = MyGraph();
@@ -147,6 +147,6 @@ void Cluster::createLocalGraph() {
 	localGraph.doClustering(allImages.size());
 	localGraph.classesToString();
 	localGraph.compareSiftForNeighborhood();
-	localGraph.IAclassesToString();
+	localGraph.IAclassesToString();*/
 }
 

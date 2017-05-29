@@ -41,7 +41,7 @@ int main()
 	graph.IAclassesToString();
 
 	std::vector<Cluster*> allClusters = createClusters(allImages, graph.getClasses(), graph.getLocalClasses(), result);
-
+	
 	calcuateLocalVoronoi(allClusters, result);
 		
 	cvWaitKey(0);
@@ -80,6 +80,21 @@ std::vector<Cluster*> createClusters(std::vector<ImageAttribute> allImages,
 
 			}
 		}
+	}
+
+	int maxClusterSize = 0;
+	int mostClusters = 0;
+	for (int i = 0;i < globalCusterMapping.size();i++) {
+		if (globalCusterMapping[i].size() > maxClusterSize) {
+			mostClusters = i;
+			maxClusterSize = globalCusterMapping[i].size();
+		}
+	}
+
+	if (mostClusters != (globalCusterMapping.size() - 1)) {
+		std::vector<ImageAttribute> tmp = globalCusterMapping[globalCusterMapping.size() - 1];
+		globalCusterMapping[globalCusterMapping.size() - 1] = globalCusterMapping[mostClusters];
+		globalCusterMapping[mostClusters] = tmp;
 	}
 
 	//create clusters with calculated height, width and position to get initial pivot for global voronoi
@@ -225,22 +240,22 @@ Cluster* createCluster(std::vector<ImageAttribute> allImages, int height, int wi
 
 	for (int row = 0; row < rowCount;row++) {
 		for (int col = 0;col < colCount && imageIndex + 1 <= (allImages.size());col++) {
-			Size oldSize = allImages[imageIndex].getCropped().size();
-			cv::Mat resizedImage;
+			//Size oldSize = allImages[imageIndex].getCropped().size();
+			//cv::Mat resizedImage;
 			int currentCellWidth = cellWidth;
 			if (row == rowCount - 1) {
 				//last row, split different!
 				currentCellWidth = lastCellWidth;
 			}
 
-			if (oldSize.width >= oldSize.height) {
-				float widthRatio = (float)currentCellWidth / (float)oldSize.width;
-				resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
-			}
-			else {
-				float heightRatio = (float)cellHeight / (float)oldSize.height;
-				resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
-			}
+			//if (oldSize.width >= oldSize.height) {
+			//	float widthRatio = (float)currentCellWidth / (float)oldSize.width;
+			//	resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
+			//}
+			//else {
+			//	float heightRatio = (float)cellHeight / (float)oldSize.height;
+			//	resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
+			//}
 
 			pos = cv::Point(position.x+lastWidthResult, position.y+lastHeightResult);
 			piv = cv::Point(position.x + lastWidthResult + (currentCellWidth / 2), position.y + lastHeightResult + (cellHeight / 2));
@@ -403,19 +418,21 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 		for (int clus = 0;clus < allclusters.size();clus++) {
 			int localCounter = 0;
 			for (int Lclus = 0;Lclus < allclusters[clus]->allLocalClusters.size();Lclus++) {
+				if (localCounter < allclusters[clus]->allLocalClusters.size()) {
+					cv::Mat tmp = allclusters[clus]->allLocalClusters[Lclus]->getSaliencyCroppedImage();
+					floodFill(cells, ouput,
+						tmp,
+						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.x,
+						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.y,
+						tmp.size().width / 2,
+						tmp.size().height / 2,
+						tmp.size().width,
+						tmp.size().height);
+
+					allCalculatedpositions.push_back(allclusters[clus]->allLocalClusters[Lclus]->globalPivot);
+					cv::circle(ouput, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 4, Scalar(255, 0, 0), 3);
+				}
 				localCounter++;
-				floodFill(cells, ouput,
-					allclusters[clus]->allLocalClusters[Lclus]->image.getImage(),
-					allclusters[clus]->allLocalClusters[Lclus]->globalPivot.x,
-					allclusters[clus]->allLocalClusters[Lclus]->globalPivot.y,
-					allclusters[clus]->allLocalClusters[Lclus]->image.getImage().size().width / 2,
-					allclusters[clus]->allLocalClusters[Lclus]->image.getImage().size().height / 2,
-					allclusters[clus]->allLocalClusters[Lclus]->image.getImage().size().width,
-					allclusters[clus]->allLocalClusters[Lclus]->image.getImage().size().height);
-
-				allCalculatedpositions.push_back(allclusters[clus]->allLocalClusters[Lclus]->globalPivot);
-				cv::circle(ouput, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 4, Scalar(255, 0, 0), 3);
-
 			}
 			//std::cout << clus << " cluster" << std::endl;
 			//std::cout << localCounter << " local" << std::endl;

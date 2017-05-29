@@ -15,11 +15,15 @@ public:
 		cv::Point globalPivot;
 
 		cv::Point position;
-		ImageAttribute image;
+		
+		cv::Mat getImage() { return image.getImage(); };
+		cv::Mat getSaliencyCroppedImage();
 		
 		int cellHeight;
 		int cellWidth;
 
+private:
+	ImageAttribute image;
 
 	};
 
