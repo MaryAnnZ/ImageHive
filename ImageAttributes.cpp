@@ -132,7 +132,19 @@ bool ImageAttribute::compareImage(ImageAttribute image)
 
 void ImageAttribute::calculateObjectness()
 {
-	if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
+	cv::Mat imageToProc;
+	bool firstLoop = true;
+	if (croppedImage.empty() && croppedImage2.empty()) {
+		imageToProc = image.clone();
+	}
+	else if (!croppedImage.empty() && croppedImage2.empty()) {
+		imageToProc = croppedImage.clone();
+		firstLoop = false;
+	}
+	else {
+		return;
+	}
+	if		(objectnessBoundingBox.empty() && objectnessValue.empty()) {
 		cv::Ptr<cv::saliency::Saliency> saliencyAlgorithmBing = cv::saliency::Saliency::create("BING");
 		if (saliencyAlgorithmBing == NULL) {
 			std::cout << "something went wrong :(" << std::endl;
@@ -142,13 +154,13 @@ void ImageAttribute::calculateObjectness()
 		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath("C:/ObjectnessTrainedModel");
 		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
 
-		if (saliencyAlgorithmBing->computeSaliency(image, objectnessBoundingBox)) {
+		if (saliencyAlgorithmBing->computeSaliency(imageToProc, objectnessBoundingBox)) {
 			std::cout << "Objectness done" << std::endl;
 			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
 				int end = objectnessBoundingBox.size() / 40;
-				cv::Mat clone = image.clone();
+				cv::Mat clone = imageToProc.clone();
 				float avgX = 0;
 				float avgY = 0;
 				std::vector<cv::Vec4i> salientBoundingBoxes;
@@ -198,14 +210,15 @@ void ImageAttribute::calculateObjectness()
 					finalLowerLeftY = 0;
 				}
 				int finalUpperRightX = getMean(upperRightX) + getVariance(upperRightX);
-				if (finalUpperRightX > image.cols) {
-					finalUpperRightX = image.cols;
+				if (finalUpperRightX > imageToProc.cols) {
+					finalUpperRightX = imageToProc.cols;
 				}
 				int finalUpperRightY = getMean(upperRightY) + getVariance(upperRightY);
-				if (finalUpperRightY > image.rows) {
-					finalUpperRightY = image.rows;
+				if (finalUpperRightY > imageToProc.rows) {
+					finalUpperRightY = imageToProc.rows;
 				}
 				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
+<<<<<<< HEAD
 				croppedImage = image.clone();
 				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
 
@@ -230,6 +243,30 @@ void ImageAttribute::calculateObjectness()
 				//cv::imshow(filePath, image);
 
 
+=======
+				if (firstLoop) {
+					croppedImage = imageToProc.clone();
+					croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//Display
+					/*cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath + "BING", clone);
+					cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath, croppedImage);*/
+				}
+				else {
+					croppedImage2 = croppedImage.clone();
+					croppedImage2 = croppedImage2(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//Display
+					/*cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath + "BING2", clone);
+					cv::namedWindow(filePath + "2", CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath + "2", croppedImage2);*/
+				}
+				objectnessBoundingBox.clear();
+				objectnessValue.clear();
+>>>>>>> calculate objectness on the cropped image
 			}
 		}
 	}
