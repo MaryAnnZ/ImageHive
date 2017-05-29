@@ -132,6 +132,18 @@ bool ImageAttribute::compareImage(ImageAttribute image)
 
 void ImageAttribute::calculateObjectness()
 {
+	cv::Mat imageToProc;
+	bool firstLoop = true;
+	if (croppedImage.empty() && croppedImage2.empty()) {
+		imageToProc = image.clone();
+	}
+	else if (!croppedImage.empty() && croppedImage2.empty()) {
+		imageToProc = croppedImage.clone();
+		firstLoop = false;
+	}
+	else {
+		return;
+	}
 	if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
 		cv::Ptr<cv::saliency::Saliency> saliencyAlgorithmBing = cv::saliency::Saliency::create("BING");
 		if (saliencyAlgorithmBing == NULL) {
@@ -142,13 +154,13 @@ void ImageAttribute::calculateObjectness()
 		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath("C:/ObjectnessTrainedModel");
 		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
 
-		if (saliencyAlgorithmBing->computeSaliency(image, objectnessBoundingBox)) {
+		if (saliencyAlgorithmBing->computeSaliency(imageToProc, objectnessBoundingBox)) {
 			std::cout << "Objectness done" << std::endl;
 			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
 				int end = objectnessBoundingBox.size() / 40;
-				cv::Mat clone = image.clone();
+				cv::Mat clone = imageToProc.clone();
 				float avgX = 0;
 				float avgY = 0;
 				std::vector<cv::Vec4i> salientBoundingBoxes;
@@ -198,38 +210,52 @@ void ImageAttribute::calculateObjectness()
 					finalLowerLeftY = 0;
 				}
 				int finalUpperRightX = getMean(upperRightX) + getVariance(upperRightX);
-				if (finalUpperRightX > image.cols) {
-					finalUpperRightX = image.cols;
+				if (finalUpperRightX > imageToProc.cols) {
+					finalUpperRightX = imageToProc.cols;
 				}
 				int finalUpperRightY = getMean(upperRightY) + getVariance(upperRightY);
-				if (finalUpperRightY > image.rows) {
-					finalUpperRightY = image.rows;
+				if (finalUpperRightY > imageToProc.rows) {
+					finalUpperRightY = imageToProc.rows;
 				}
 				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
-				croppedImage = image.clone();
-				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
-
-				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalLowerLeftY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalUpperRightY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalUpperRightY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalLowerLeftY));
-
-				cv::circle(croppedImage, Point(finalLowerLeftX, finalLowerLeftY), 20, Scalar(255, 0, 0), 2, 8);
-				cv::circle(croppedImage, Point(finalUpperRightX, finalUpperRightY), 20, Scalar(255, 0, 0), 2, 8);
-
-				//cv::line(image, croppedImageRectangleVertices[0], croppedImageRectangleVertices[1], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[1], croppedImageRectangleVertices[2], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[2], croppedImageRectangleVertices[3], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[4], croppedImageRectangleVertices[0], Scalar(0, 0, 255), 2, 8);
-
-				//cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
-				/// Display
-				//cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
-				//cv::imshow(filePath + "BING", clone);
-				//cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				//cv::imshow(filePath, image);
-
-
+				if (firstLoop) {
+					croppedImage = imageToProc.clone();
+					croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cropped1Coords.clear();
+					cropped1Coords.push_back(finalLowerLeftX);
+					cropped1Coords.push_back(finalLowerLeftY);
+					cropped1Coords.push_back(finalUpperRightX);
+					cropped1Coords.push_back(finalUpperRightY);
+					//cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//Display
+					/*cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath + "BING", clone);
+					cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath, croppedImage);*/
+				}
+				else {
+					croppedImage2 = croppedImage.clone();
+					croppedImage2 = croppedImage2(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cropped2Coords.clear();
+					cropped2Coords.push_back(finalLowerLeftX + cropped1Coords.at(0));
+					cropped2Coords.push_back(finalLowerLeftY + cropped1Coords.at(1));
+					cropped2Coords.push_back(finalUpperRightX + cropped1Coords.at(0));
+					cropped2Coords.push_back(finalUpperRightY + cropped1Coords.at(1));
+					//cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//Display
+					//cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
+					//cv::imshow(filePath + "BING2", clone);
+					//cv::namedWindow(filePath + "2", CV_WINDOW_AUTOSIZE);
+					//cv::imshow(filePath + "2", croppedImage2);
+				}
+				//if (!cropped2Coords.empty()) {
+				//	cv::Mat test = image.clone();
+				//	cv::rectangle(test, cv::Point(cropped2Coords.at(0), cropped2Coords.at(1)), cv::Point(cropped2Coords.at(2), cropped2Coords.at(3)), cv::Scalar(0, 0, 255), 4);
+				//	cv::namedWindow(filePath + "test", CV_WINDOW_AUTOSIZE);
+				//	cv::imshow(filePath + "test", test); 
+				//}
+				objectnessBoundingBox.clear();
+				objectnessValue.clear();
 			}
 		}
 	}
@@ -284,8 +310,8 @@ int ImageAttribute::getMean(std::vector<int> values)
 void ImageAttribute::calculateKeyPoints()
 {
 	if (!croppedImage.empty()) {
-		cv::Mat greyScale = croppedImage.clone();		
-		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);	
+		cv::Mat greyScale = croppedImage.clone();
+		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);
 		cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> surf = cv::xfeatures2d::SurfFeatureDetector::create(400);
 		surf->detect(greyScale, keypoints);
 		cv::Ptr<cv::xfeatures2d::SurfDescriptorExtractor> extractor = cv::xfeatures2d::SurfFeatureDetector::create();

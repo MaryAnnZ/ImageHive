@@ -4,7 +4,10 @@
 class ImageAttribute
 {
 public:
-	
+	/**
+	*Ein ImageAttribute stellt ein Bild dar und speichert seine relevante Attribute
+	*
+	*/
 	::ImageAttribute(cv::Mat img, int idVal, std::string path);
 	ImageAttribute();
 	~ImageAttribute();
@@ -38,14 +41,16 @@ public:
 	bool operator<(ImageAttribute other) const { return image.size < other.image.size; }
 
 	cv::Mat getCropped() {return croppedImage;};
-
-	
+	cv::Mat getCroppedImage2() { return croppedImage2; }
+	std::vector<int> getCropped1Coords() { return cropped1Coords; }
+	std::vector<int> getCropped2Coords() { return cropped2Coords; }
 
 private:
 	cv::Mat image;
 	int id;
 	cv::Mat resizedImage;
 	cv::Mat croppedImage;
+	cv::Mat croppedImage2;
 
 	std::vector<cv::Point> croppedImageRectangleVertices;
 
@@ -64,6 +69,10 @@ private:
 
 	std::vector<cv::KeyPoint> keypoints;
 	cv::Mat descriptor;
+
+	//lowerLeftX; lowerLeftY; upperRightX; upperRightY
+	std::vector<int> cropped1Coords;
+	std::vector<int> cropped2Coords;
 
 };
 
