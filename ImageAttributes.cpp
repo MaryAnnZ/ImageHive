@@ -248,12 +248,14 @@ void ImageAttribute::calculateObjectness()
 					//cv::namedWindow(filePath + "2", CV_WINDOW_AUTOSIZE);
 					//cv::imshow(filePath + "2", croppedImage2);
 				}
-				//if (!cropped2Coords.empty()) {
-				//	cv::Mat test = image.clone();
-				//	cv::rectangle(test, cv::Point(cropped2Coords.at(0), cropped2Coords.at(1)), cv::Point(cropped2Coords.at(2), cropped2Coords.at(3)), cv::Scalar(0, 0, 255), 4);
-				//	cv::namedWindow(filePath + "test", CV_WINDOW_AUTOSIZE);
-				//	cv::imshow(filePath + "test", test); 
-				//}
+				if (!cropped2Coords.empty()) {
+					cv::Mat test = image.clone();
+					cv::rectangle(test, cv::Point(cropped2Coords.at(0), cropped2Coords.at(1)), cv::Point(cropped2Coords.at(2), cropped2Coords.at(3)), cv::Scalar(0, 0, 255), 4);
+					cv::rectangle(test, cv::Point(cropped1Coords.at(0), cropped1Coords.at(1)), cv::Point(cropped1Coords.at(2), cropped1Coords.at(3)), cv::Scalar(0, 0, 255), 4);
+					
+					cv::namedWindow(filePath + "test", CV_WINDOW_AUTOSIZE);
+					cv::imshow(filePath + "test", test); 
+				}
 				objectnessBoundingBox.clear();
 				objectnessValue.clear();
 			}
