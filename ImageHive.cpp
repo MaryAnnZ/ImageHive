@@ -40,10 +40,12 @@ int main()
 	graph.compareSiftForNeighborhood();
 	graph.IAclassesToString();
 
-	std::vector<Cluster*> allClusters = createClusters(allImages, graph.getClasses(), graph.getLocalClasses(), result);
+	std::vector<Cluster*> allClusters = createClustersAndGlobalVoronoi(allImages, graph.getClasses(), graph.getLocalClasses(), result);
 	
-	calcuateLocalVoronoi(allClusters, result);
+	allClusters = doLocalVoronoi(allClusters, result);
 		
+	doGLobalVoronoiWithLocalClusters(allClusters, result);
+
 	cvWaitKey(0);
 	return 0;
 }
@@ -51,7 +53,7 @@ int main()
 /**
 * TODO
 */
-std::vector<Cluster*> createClusters(std::vector<ImageAttribute> allImages,
+std::vector<Cluster*> createClustersAndGlobalVoronoi(std::vector<ImageAttribute> allImages,
 	std::map<int, std::vector<MyEdge>> globalClasses,
 	std::map<int, std::vector<MyGraph::SiftImg>> localClasses,
 	ResultImage result) {
@@ -145,23 +147,21 @@ std::vector<Cluster*> createClusters(std::vector<ImageAttribute> allImages,
 	
 	//Do global voronoi, calcuated edges and safe them in cluster mapping
 	std::vector<cv::Point> allpositions;
-	std::map<int, Cluster*> pointMap;
+	std::vector<Cluster*> pointMap;
 
 	int i = 0;
 	for (int clus = 0;clus < allGlobalClusters.size();clus++) {
 			cv::Point pivot = cv::Point(allGlobalClusters[clus]->pivot);
 			allpositions.push_back(Point(pivot.x, pivot.y));
-			pointMap[i] = allGlobalClusters[clus];
+			pointMap.push_back(allGlobalClusters[clus]);
 			i++;
 	}
 
 	string GlobalVoronoi = "GlobalVoronoi";
 	// allocate space for voronoi diagram
 	Mat cells = Mat::zeros(result.getHeight(), result.getWidth(), CV_8UC3);
-
-	std::vector<std::pair<cv::Point, cv::Point>> voronoiEdges;
-
-	calculatedGlobalVoronoiEdges(allpositions, cells.size().width, cells.size().height, pointMap, &voronoiEdges);
+	
+	calculateGlobalVoronoiEdges(allpositions, cells.size().width, cells.size().height, pointMap);
 	
 	for (int clus = 0;clus < allGlobalClusters.size();clus++) {
 		Scalar col = Scalar(rand() / 255, rand() / 255, rand() / 255);
@@ -172,8 +172,6 @@ std::vector<Cluster*> createClusters(std::vector<ImageAttribute> allImages,
 					Scalar(255, 255, 255), 1, 8, 0);
 			}
 
-			allGlobalClusters[clus]->calculatedBoundingBox();
-
 			cv::circle(cells, allGlobalClusters[clus]->pivot, 2, Scalar(255, 255, 255));
 			cv::circle(cells, allGlobalClusters[clus]->position, 4, Scalar(255, 0, 0),8);
 
@@ -182,35 +180,17 @@ std::vector<Cluster*> createClusters(std::vector<ImageAttribute> allImages,
 				cv::circle(cells, cv::Point(allGlobalClusters[clus]->allLocalClusters[Lclus]->position), 4, col, 8);
 			}
 
-			//draw cells
-			cv::line(cells,
-				allGlobalClusters[clus]->boundingVertices[0],
-				allGlobalClusters[clus]->boundingVertices[1],
-				col, 1, 8, 0);
-
-			cv::line(cells,
-				allGlobalClusters[clus]->boundingVertices[1],
-				allGlobalClusters[clus]->boundingVertices[2],
-				col, 1, 8, 0);
-
-			cv::line(cells,
-				allGlobalClusters[clus]->boundingVertices[2],
-				allGlobalClusters[clus]->boundingVertices[3],
-				col, 1, 8, 0);
-
-			cv::line(cells,
-				allGlobalClusters[clus]->boundingVertices[3],
-				allGlobalClusters[clus]->boundingVertices[0],
-				col, 1, 8, 0);
+			drawBoundingBox(cells, allGlobalClusters[clus], col);
 	}
 
-	imshow("voronoi cells", cells);
+	cv::imshow("voronoi cells", cells);
 	
-	waitKey(0);
+	cv::waitKey(0);
 
 
 	return allGlobalClusters;
 }
+
 
 /**
 * TODO
@@ -240,22 +220,11 @@ Cluster* createCluster(std::vector<ImageAttribute> allImages, int height, int wi
 
 	for (int row = 0; row < rowCount;row++) {
 		for (int col = 0;col < colCount && imageIndex + 1 <= (allImages.size());col++) {
-			//Size oldSize = allImages[imageIndex].getCropped().size();
-			//cv::Mat resizedImage;
 			int currentCellWidth = cellWidth;
 			if (row == rowCount - 1) {
 				//last row, split different!
 				currentCellWidth = lastCellWidth;
 			}
-
-			//if (oldSize.width >= oldSize.height) {
-			//	float widthRatio = (float)currentCellWidth / (float)oldSize.width;
-			//	resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(currentCellWidth - 1, min(cellHeight, oldSize.height*widthRatio)));
-			//}
-			//else {
-			//	float heightRatio = (float)cellHeight / (float)oldSize.height;
-			//	resizedImage = allImages[imageIndex].resize(allImages[imageIndex].getCropped(), Size(min(currentCellWidth, oldSize.width*heightRatio), cellHeight - 1));
-			//}
 
 			pos = cv::Point(position.x+lastWidthResult, position.y+lastHeightResult);
 			piv = cv::Point(position.x + lastWidthResult + (currentCellWidth / 2), position.y + lastHeightResult + (cellHeight / 2));
@@ -275,7 +244,7 @@ Cluster* createCluster(std::vector<ImageAttribute> allImages, int height, int wi
 }
 
 
-void calculatedGlobalVoronoiEdges(std::vector<cv::Point> all, int width, int height, std::map<int, Cluster*> clusterMapping, std::vector<std::pair<cv::Point, cv::Point>> *edges) {
+void calculateGlobalVoronoiEdges(std::vector<cv::Point> all, int width, int height, std::vector<Cluster*> clusterMapping) {
 
 	jcv_point* points = 0;
 	points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)all.size());
@@ -299,7 +268,7 @@ void calculatedGlobalVoronoiEdges(std::vector<cv::Point> all, int width, int hei
 	rect[0].max = max;
 
 	jcv_diagram voronoi;
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 700; ++i)
 	{
 		memset(&voronoi, 0, sizeof(jcv_diagram));
 		jcv_diagram_generate(all.size(), (const jcv_point*)points, rect, &voronoi);
@@ -320,10 +289,7 @@ void calculatedGlobalVoronoiEdges(std::vector<cv::Point> all, int width, int hei
 		{
 			jcv_point p0 = recalcPoint(&e->pos[0], &voronoi.min, &voronoi.max, width, height);
 			jcv_point p1 = recalcPoint(&e->pos[1], &voronoi.min, &voronoi.max, width, height);
-
-
-
-			edges->push_back(std::pair<cv::Point, cv::Point>(Point(p0.x, p0.y), Point(p1.x, p1.y)));
+			
 			clusterMapping.at(i)->polygonVertices.push_back(Point(p0.x, p0.y));
 			clusterMapping.at(i)->polygonEdges.push_back(std::pair<cv::Point, cv::Point>(Point(p0.x, p0.y), Point(p1.x, p1.y)));
 
@@ -331,16 +297,17 @@ void calculatedGlobalVoronoiEdges(std::vector<cv::Point> all, int width, int hei
 		}
 
 		clusterMapping.at(i)->pivot = cv::Point(points[i].x, points[i].y);
+		clusterMapping.at(i)->calculatedBoundingBox();
 	}
 
 	jcv_diagram_free(&voronoi);
-	free(points);
-	free(rect);
+	std::free(points);
+	std::free(rect);
 
 }
 
 
-void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalResult) {
+std::vector<Cluster*> doLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalResult) {
 
 	string win_voronoi = "localVoronoi";
 
@@ -348,7 +315,6 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 	Mat cells = Mat::zeros(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3);
 	cells.setTo(cv::Scalar(0, 0, 255));
 
-	std::vector<cv::Point> allCalculatedpositions;
 
 	for (int clus = 0;clus < allclusters.size();clus++) {
 		std::vector<cv::Point> allpositions;
@@ -369,7 +335,7 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 
 		std::vector<std::pair<cv::Point, cv::Point>> voronoiEdges;
 
-		calculatedLocalVoronoiEdges(allclusters[clus], allpositions, pointMap, &voronoiEdges, allclusters[clus]->position);
+		calculateLocalVoronoiEdges(allclusters[clus], allpositions, pointMap, allclusters[clus]->position);
 
 
 		for (int clus = 0;clus < allclusters.size();clus++) {
@@ -381,35 +347,13 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 						allclusters[clus]->allLocalClusters[Lclus]->globalPolygonEdges.at(i).second,
 						col, 1, 8, 0);
 
-					////draw cells
-					//cv::line(cells,
-					//	allclusters[clus]->allLocalClusters[Lclus]->position,
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x + allclusters[clus]->allLocalClusters[Lclus]->cellWidth,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y)
-					//	, Scalar(255, 255, 255), 1, 8, 0);
-
-					//cv::line(cells,
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x + allclusters[clus]->allLocalClusters[Lclus]->cellWidth,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y),
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x + allclusters[clus]->allLocalClusters[Lclus]->cellWidth,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y + allclusters[clus]->allLocalClusters[Lclus]->cellHeight),
-					//	Scalar(255, 255, 255), 1, 8, 0);
-
-					//cv::line(cells,
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x + allclusters[clus]->allLocalClusters[Lclus]->cellWidth,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y + allclusters[clus]->allLocalClusters[Lclus]->cellHeight),
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y + allclusters[clus]->allLocalClusters[Lclus]->cellHeight),
-					//	Scalar(255, 255, 255), 1, 8, 0);
-
-					//cv::line(cells,
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position.x,
-					//		allclusters[clus]->allLocalClusters[Lclus]->position.y + allclusters[clus]->allLocalClusters[Lclus]->cellHeight),
-					//	cv::Point(allclusters[clus]->allLocalClusters[Lclus]->position),
-					//	Scalar(255, 255, 255), 1, 8, 0);
 				}
 
-				//cv::circle(cells, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 3, Scalar(0, 0, 255));
+				for (int i = 0;i < allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices.size();i++) {
+					cv::circle(cells, allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices[i], 3, Scalar(0, 255, 0));
+				}
+
+				
 			}
 		}
 
@@ -418,7 +362,6 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 		for (int clus = 0;clus < allclusters.size();clus++) {
 			int localCounter = 0;
 			for (int Lclus = 0;Lclus < allclusters[clus]->allLocalClusters.size();Lclus++) {
-				if (localCounter < allclusters[clus]->allLocalClusters.size()) {
 					cv::Mat tmp = allclusters[clus]->allLocalClusters[Lclus]->getSaliencyCroppedImage();
 					floodFill(cells, ouput,
 						tmp,
@@ -429,9 +372,8 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 						tmp.size().width,
 						tmp.size().height);
 
-					allCalculatedpositions.push_back(allclusters[clus]->allLocalClusters[Lclus]->globalPivot);
-					cv::circle(ouput, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 4, Scalar(255, 0, 0), 3);
-				}
+					cv::circle(ouput, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 4, Scalar(0, 0, 255), 3);
+				
 				localCounter++;
 			}
 			//std::cout << clus << " cluster" << std::endl;
@@ -439,20 +381,22 @@ void calcuateLocalVoronoi(std::vector<Cluster*> allclusters, ResultImage globalR
 			//std::cout << "*******************************" << std::endl;
 		}
 
-		imshow("voronoi filled", ouput);
+		cv::imshow("voronoi filled", ouput);
 
 		voronoiEdges.clear();
 		pointMap.clear();
 		allpositions.clear();
 	}
-	imshow("voronoi Local cells", cells);
 
-	waitKey(0);
+	cv::imshow("voronoi Local cells", cells);
+	cv::waitKey(0);
+
+	return allclusters;
 }
 
 
 //https://github.com/JCash/voronoi/tree/87c0ab219a531721a1dd7e57d5134444437d95c0
-void calculatedLocalVoronoiEdges(Cluster* clus, std::vector<cv::Point> all, std::map<int, LocalCluster*> clusterMapping, std::vector<std::pair<cv::Point, cv::Point>> *edges, cv::Point offsetPosition) {
+void calculateLocalVoronoiEdges(Cluster* clus, std::vector<cv::Point> all, std::map<int, LocalCluster*> clusterMapping, cv::Point offsetPosition) {
 
 	int height = clus->height;
 	int width = clus->width;
@@ -479,7 +423,7 @@ void calculatedLocalVoronoiEdges(Cluster* clus, std::vector<cv::Point> all, std:
 	rect[0].max = max;
 
 	jcv_diagram voronoi;
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 700; ++i)
 	{
 		memset(&voronoi, 0, sizeof(jcv_diagram));
 		jcv_diagram_generate(all.size(), (const jcv_point*)points, rect, &voronoi);
@@ -507,24 +451,180 @@ void calculatedLocalVoronoiEdges(Cluster* clus, std::vector<cv::Point> all, std:
 				Point(p0.x,p0.y),
 				Point(p1.x, p1.y),
 				Scalar(255,0,0), 3, 7, 0);
-
-			edges->push_back(std::pair<cv::Point, cv::Point>(Point(p0.x+offsetPosition.x, p0.y + offsetPosition.y), Point(p1.x+offsetPosition.x, p1.y+offsetPosition.y)));
+			
 			clusterMapping.at(i)->globalPolygonVertices.push_back(Point(p0.x + offsetPosition.x, p0.y + offsetPosition.y));
 			clusterMapping.at(i)->globalPolygonEdges.push_back(std::pair<cv::Point, cv::Point>(Point(p0.x + offsetPosition.x, p0.y + offsetPosition.y), Point(p1.x + offsetPosition.x, p1.y + offsetPosition.y)));
 
 			e = e->next;
 		}
 
-		clusterMapping.at(i)->globalPivot = cv::Point(points[i].x + offsetPosition.x, points[i].y + offsetPosition.y);
+		
+		clusterMapping.at(i)->globalPivot = cv::Point(site->p.x + offsetPosition.x, site->p.y + offsetPosition.y);
+		clusterMapping.at(i)->calculateBoundingBox();
 	}
 	
-	imshow("voronoi_Local"+ height+width, local);
+	cv::imshow("voronoi_Local"+ height+width, local);
+
+	jcv_diagram_free(&voronoi);
+	std::free(points);
+	std::free(rect);
+
+}
+
+
+/**
+* Testing voronoi with local points
+**/
+void doGLobalVoronoiWithLocalClusters(std::vector<Cluster*>  allClusters, ResultImage result) {
+
+	string win_voronoi = "localVoronoi";
+
+	// allocate space for voronoi diagram
+	Mat cells = Mat::zeros(result.getHeight(), result.getWidth(), CV_8UC3);
+	cells.setTo(cv::Scalar(0, 0, 0));
+
+	std::vector<cv::Point> allCalculatedpositions;
+
+	std::vector<cv::Point> allpositions;
+	std::vector<LocalCluster*> pointMap;
+
+	int i = 0;
+	for (int clus = 0;clus < allClusters.size();clus++) {
+		for (int Lclus = 0;Lclus < allClusters[clus]->allLocalClusters.size();Lclus++) {
+			allpositions.push_back(cv::Point(allClusters[clus]->allLocalClusters[Lclus]->globalPivot));
+			pointMap.push_back(allClusters[clus]->allLocalClusters[Lclus]);
+			i++;
+		}
+	}
+	
+	calcGLobalWithLocalVoronoi(allpositions, pointMap, cells);
+	
+	imshow("TEST cells", cells);
+
+	waitKey(0);
+	
+	pointMap.clear();
+	allpositions.clear();
+}
+
+/**
+* Do GLobal Voronoi with ALL calculated Local positions
+* https://github.com/JCash/voronoi/tree/87c0ab219a531721a1dd7e57d5134444437d95c0
+**/
+void calcGLobalWithLocalVoronoi(std::vector<cv::Point> all, std::vector<LocalCluster*> map, cv::Mat global) {
+
+	jcv_point* points = 0;
+	points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)all.size());
+
+	for (int i = 0; i < all.size(); ++i)
+	{
+		points[i].x = (float)(all.at(i).x);
+		points[i].y = (float)(all.at(i).y);
+	}
+
+	jcv_point min;
+	min.x = (float)(0);
+	min.y = (float)(0);
+
+	jcv_point max;
+	max.x = (float)(global.size().width - 1);
+	max.y = (float)(global.size().height - 1);
+
+	jcv_rect* rect = (jcv_rect*)malloc(sizeof(jcv_rect));
+	rect[0].min = min;
+	rect[0].max = max;
+
+	jcv_diagram voronoi;
+
+	memset(&voronoi, 0, sizeof(jcv_diagram));
+	jcv_diagram_generate(all.size(), (const jcv_point*)points, rect, &voronoi);
+
+	// If you want to draw triangles, or relax the diagram,
+	// you can iterate over the sites and get all edges easily
+	const jcv_site* sites = jcv_diagram_get_sites(&voronoi);
+	for (int i = 0; i < voronoi.numsites; ++i)
+	{
+		const jcv_site* site = &sites[i];
+
+		const jcv_graphedge* e = site->edges;
+		while (e)
+		{
+			jcv_point p0 = recalcPoint(&e->pos[0], &voronoi.min, &voronoi.max, global.size().width, global.size().height);
+			jcv_point p1 = recalcPoint(&e->pos[1], &voronoi.min, &voronoi.max, global.size().width, global.size().height);
+
+			//Draw new Points/Lines
+			cv::line(global, Point(p0.x, p0.y), Point(p1.x, p1.y), Scalar(255, 255, 255), 3, 7, 0);
+
+
+			e = e->next;
+		}
+
+	}
+
+	Mat boundarySrc = Mat::zeros(global.size().height, global.size().width, CV_8UC3);
+	boundarySrc.setTo(Scalar(0, 0, 255));
+
+
+	Mat output = Mat::zeros(global.size().height, global.size().width, CV_8UC3);
+	output.setTo(Scalar(0, 0, 0));
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		memset(&voronoi, 0, sizeof(jcv_diagram));
+		jcv_diagram_generate(all.size(), (const jcv_point*)points, rect, &voronoi);
+
+		relax_points(&voronoi, points);
+
+		for (int i = 0; i < all.size(); ++i)
+		{
+			cv::circle(global, Point(points[i].x, points[i].y), 2, Scalar(255, 0, 0), 3, 8);
+		}
+		
+	}
+
+	// If you want to draw triangles, or relax the diagram,
+	// you can iterate over the sites and get all edges easily
+	const jcv_site* sites2 = jcv_diagram_get_sites(&voronoi);
+	for (int i = 0; i < voronoi.numsites; ++i)
+	{
+		const jcv_site* site = &sites2[i];
+
+		const jcv_graphedge* e = site->edges;
+		while (e)
+		{
+			jcv_point p0 = recalcPoint(&e->pos[0], &voronoi.min, &voronoi.max, global.size().width, global.size().height);
+			jcv_point p1 = recalcPoint(&e->pos[1], &voronoi.min, &voronoi.max, global.size().width, global.size().height);
+
+			//Draw new Points/Lines
+			cv::line(global, Point(p0.x, p0.y), Point(p1.x, p1.y), Scalar(255, 0, 0), 3, 7, 0);
+			cv::line(boundarySrc, Point(p0.x, p0.y), Point(p1.x, p1.y), Scalar(255, 255, 255), 3, 8, 0);
+
+			cv::Mat tmp = map[i]->getSaliencyCroppedImage();
+			floodFill(boundarySrc, output, tmp,
+				map[i]->globalPivot.x,
+				map[i]->globalPivot.y,
+				tmp.size().width / 2,
+				tmp.size().height / 2,
+				tmp.size().width,
+				tmp.size().height);
+
+			e = e->next;
+		}
+
+	}
+
+
+	imshow("output Global cells", output);
+	imshow("boundry", boundarySrc);
+
+	waitKey(0);
 
 	jcv_diagram_free(&voronoi);
 	free(points);
 	free(rect);
 
 }
+
 
 // Remaps the point from the input space to image space
 jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point* max, Cluster* clus)
@@ -547,29 +647,28 @@ jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point
 	return p;
 }
 
-
-
-// Draw a single point
-void draw_point(Mat& img, cv::Point fp, Scalar color)
+void relax_points(const jcv_diagram* diagram, jcv_point* points)
 {
-	circle(img, fp, 2, color, CV_FILLED, CV_AA, 0);
-}
+	const jcv_site* sites = jcv_diagram_get_sites(diagram);
+	for (int i = 0; i < diagram->numsites; ++i)
+	{
+		const jcv_site* site = &sites[i];
+		jcv_point sum = site->p;
+		int count = 1;
 
-Mat drawHelperLines(Mat img) {
+		const jcv_graphedge* edge = site->edges;
 
-	/*Mat newImg = Mat(img);
-	int colCount = newImg.cols/100;
-	int rowCount = newImg.rows / 100;
+		while (edge)
+		{
+			sum.x += edge->pos[0].x;
+			sum.y += edge->pos[0].y;
+			++count;
+			edge = edge->next;
+		}
 
-	for (int x = newImg.cols-1;x >= 0;x -= 100) {
-		line(newImg, cv::Point(max(0, x), 0),cv::Point(max(0, x), newImg.rows-1), Scalar(255, 0, 0));
+		points[site->index].x = sum.x / count;
+		points[site->index].y = sum.y / count;
 	}
-
-	for (int y = newImg.rows - 1;y >= 0;y -= 100) {
-		line(newImg, cv::Point(0, max(0, y)), cv::Point(newImg.cols - 1, max(0, y)), Scalar(0, 255, 0));
-	}*/
-
-	return img;
 }
 
 
@@ -615,32 +714,58 @@ void floodFill(Mat src, Mat out, Mat colorSrc, int pointx, int pointy, int srcX,
 
 }
 
+void drawBoundingBox(cv::Mat cells, Cluster* clus, Scalar col) {
 
+	//draw cells
+	cv::line(cells,
+		clus->boundingVertices[0],
+		clus->boundingVertices[1],
+		col, 1, 8, 0);
 
+	cv::line(cells,
+		clus->boundingVertices[1],
+		clus->boundingVertices[2],
+		col, 1, 8, 0);
 
+	cv::line(cells,
+		clus->boundingVertices[2],
+		clus->boundingVertices[3],
+		col, 1, 8, 0);
 
-void relax_points(const jcv_diagram* diagram, jcv_point* points)
-{
-	const jcv_site* sites = jcv_diagram_get_sites(diagram);
-	for (int i = 0; i < diagram->numsites; ++i)
-	{
-		const jcv_site* site = &sites[i];
-		jcv_point sum = site->p;
-		int count = 1;
-
-		const jcv_graphedge* edge = site->edges;
-
-		while (edge)
-		{
-			sum.x += edge->pos[0].x;
-			sum.y += edge->pos[0].y;
-			++count;
-			edge = edge->next;
-		}
-
-		points[site->index].x = sum.x / count;
-		points[site->index].y = sum.y / count;
-	}
+	cv::line(cells,
+		clus->boundingVertices[3],
+		clus->boundingVertices[0],
+		col, 1, 8, 0);
 }
+
+void drawBoundingBox(cv::Mat cells, LocalCluster* Lclus, Scalar col) {
+	//draw cells
+	cv::line(cells,
+		Lclus->boundingVertices[0],
+		Lclus->boundingVertices[1],
+		col, 1, 8, 0);
+
+	cv::line(cells,
+		Lclus->boundingVertices[1],
+		Lclus->boundingVertices[2],
+		col, 1, 8, 0);
+
+	cv::line(cells,
+		Lclus->boundingVertices[2],
+		Lclus->boundingVertices[3],
+		col, 1, 8, 0);
+
+	cv::line(cells,
+		Lclus->boundingVertices[3],
+		Lclus->boundingVertices[0],
+		col, 1, 8, 0);
+}
+
+// Draw a single point
+void draw_point(Mat& img, cv::Point fp, Scalar color)
+{
+	circle(img, fp, 2, color, CV_FILLED, CV_AA, 0);
+}
+
 
 

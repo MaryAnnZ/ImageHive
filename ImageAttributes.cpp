@@ -208,6 +208,20 @@ void ImageAttribute::calculateObjectness()
 				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
 				croppedImage = image.clone();
 				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+
+				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalLowerLeftY));
+				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalUpperRightY));
+				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalUpperRightY));
+				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalLowerLeftY));
+
+				cv::circle(croppedImage, Point(finalLowerLeftX, finalLowerLeftY), 20, Scalar(255, 0, 0), 2, 8);
+				cv::circle(croppedImage, Point(finalUpperRightX, finalUpperRightY), 20, Scalar(255, 0, 0), 2, 8);
+
+				//cv::line(image, croppedImageRectangleVertices[0], croppedImageRectangleVertices[1], Scalar(0, 0, 255), 2, 8);
+				//cv::line(image, croppedImageRectangleVertices[1], croppedImageRectangleVertices[2], Scalar(0, 0, 255), 2, 8);
+				//cv::line(image, croppedImageRectangleVertices[2], croppedImageRectangleVertices[3], Scalar(0, 0, 255), 2, 8);
+				//cv::line(image, croppedImageRectangleVertices[4], croppedImageRectangleVertices[0], Scalar(0, 0, 255), 2, 8);
+
 				//cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 				/// Display
 				//cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);

@@ -47,6 +47,8 @@ private:
 	cv::Mat resizedImage;
 	cv::Mat croppedImage;
 
+	std::vector<cv::Point> croppedImageRectangleVertices;
+
 	std::vector<cv::Mat> bgrHist;
 	std::vector<float> valuesHOG;
 	std::vector<cv::Point> locationsHOG;
