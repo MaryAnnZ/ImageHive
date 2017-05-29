@@ -144,7 +144,7 @@ void ImageAttribute::calculateObjectness()
 	else {
 		return;
 	}
-	if		(objectnessBoundingBox.empty() && objectnessValue.empty()) {
+	if (objectnessBoundingBox.empty() && objectnessValue.empty()) {
 		cv::Ptr<cv::saliency::Saliency> saliencyAlgorithmBing = cv::saliency::Saliency::create("BING");
 		if (saliencyAlgorithmBing == NULL) {
 			std::cout << "something went wrong :(" << std::endl;
@@ -218,36 +218,10 @@ void ImageAttribute::calculateObjectness()
 					finalUpperRightY = imageToProc.rows;
 				}
 				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
-<<<<<<< HEAD
-				croppedImage = image.clone();
-				croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
-
-				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalLowerLeftY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalLowerLeftX, finalUpperRightY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalUpperRightY));
-				croppedImageRectangleVertices.push_back(cv::Point(finalUpperRightX, finalLowerLeftY));
-
-				cv::circle(croppedImage, Point(finalLowerLeftX, finalLowerLeftY), 20, Scalar(255, 0, 0), 2, 8);
-				cv::circle(croppedImage, Point(finalUpperRightX, finalUpperRightY), 20, Scalar(255, 0, 0), 2, 8);
-
-				//cv::line(image, croppedImageRectangleVertices[0], croppedImageRectangleVertices[1], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[1], croppedImageRectangleVertices[2], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[2], croppedImageRectangleVertices[3], Scalar(0, 0, 255), 2, 8);
-				//cv::line(image, croppedImageRectangleVertices[4], croppedImageRectangleVertices[0], Scalar(0, 0, 255), 2, 8);
-
-				//cv::rectangle(image, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
-				/// Display
-				//cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
-				//cv::imshow(filePath + "BING", clone);
-				//cv::namedWindow(filePath, CV_WINDOW_AUTOSIZE);
-				//cv::imshow(filePath, image);
-
-
-=======
 				if (firstLoop) {
 					croppedImage = imageToProc.clone();
 					croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
-					cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 					//Display
 					/*cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
 					cv::imshow(filePath + "BING", clone);
@@ -257,7 +231,7 @@ void ImageAttribute::calculateObjectness()
 				else {
 					croppedImage2 = croppedImage.clone();
 					croppedImage2 = croppedImage2(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
-					cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					//cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 					//Display
 					/*cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
 					cv::imshow(filePath + "BING2", clone);
@@ -266,7 +240,6 @@ void ImageAttribute::calculateObjectness()
 				}
 				objectnessBoundingBox.clear();
 				objectnessValue.clear();
->>>>>>> calculate objectness on the cropped image
 			}
 		}
 	}
@@ -321,8 +294,8 @@ int ImageAttribute::getMean(std::vector<int> values)
 void ImageAttribute::calculateKeyPoints()
 {
 	if (!croppedImage.empty()) {
-		cv::Mat greyScale = croppedImage.clone();		
-		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);	
+		cv::Mat greyScale = croppedImage.clone();
+		cv::cvtColor(greyScale, greyScale, CV_BGR2GRAY);
 		cv::Ptr<cv::xfeatures2d::SurfFeatureDetector> surf = cv::xfeatures2d::SurfFeatureDetector::create(400);
 		surf->detect(greyScale, keypoints);
 		cv::Ptr<cv::xfeatures2d::SurfDescriptorExtractor> extractor = cv::xfeatures2d::SurfFeatureDetector::create();
