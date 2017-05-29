@@ -221,6 +221,11 @@ void ImageAttribute::calculateObjectness()
 				if (firstLoop) {
 					croppedImage = imageToProc.clone();
 					croppedImage = croppedImage(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cropped1Coords.clear();
+					cropped1Coords.push_back(finalLowerLeftX);
+					cropped1Coords.push_back(finalLowerLeftY);
+					cropped1Coords.push_back(finalUpperRightX);
+					cropped1Coords.push_back(finalUpperRightY);
 					//cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 					//Display
 					/*cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
@@ -231,13 +236,24 @@ void ImageAttribute::calculateObjectness()
 				else {
 					croppedImage2 = croppedImage.clone();
 					croppedImage2 = croppedImage2(cv::Rect(finalLowerLeftX, finalLowerLeftY, finalUpperRightX - finalLowerLeftX, finalUpperRightY - finalLowerLeftY));
+					cropped2Coords.clear();
+					cropped2Coords.push_back(finalLowerLeftX + cropped1Coords.at(0));
+					cropped2Coords.push_back(finalLowerLeftY + cropped1Coords.at(1));
+					cropped2Coords.push_back(finalUpperRightX + cropped1Coords.at(0));
+					cropped2Coords.push_back(finalUpperRightY + cropped1Coords.at(1));
 					//cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 					//Display
-					/*cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
-					cv::imshow(filePath + "BING2", clone);
-					cv::namedWindow(filePath + "2", CV_WINDOW_AUTOSIZE);
-					cv::imshow(filePath + "2", croppedImage2);*/
+					//cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
+					//cv::imshow(filePath + "BING2", clone);
+					//cv::namedWindow(filePath + "2", CV_WINDOW_AUTOSIZE);
+					//cv::imshow(filePath + "2", croppedImage2);
 				}
+				//if (!cropped2Coords.empty()) {
+				//	cv::Mat test = image.clone();
+				//	cv::rectangle(test, cv::Point(cropped2Coords.at(0), cropped2Coords.at(1)), cv::Point(cropped2Coords.at(2), cropped2Coords.at(3)), cv::Scalar(0, 0, 255), 4);
+				//	cv::namedWindow(filePath + "test", CV_WINDOW_AUTOSIZE);
+				//	cv::imshow(filePath + "test", test); 
+				//}
 				objectnessBoundingBox.clear();
 				objectnessValue.clear();
 			}

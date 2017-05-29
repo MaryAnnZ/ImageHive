@@ -42,8 +42,8 @@ public:
 
 	cv::Mat getCropped() {return croppedImage;};
 	cv::Mat getCroppedImage2() { return croppedImage2; }
-
-	
+	std::vector<int> getCropped1Coords() { return cropped1Coords; }
+	std::vector<int> getCropped2Coords() { return cropped2Coords; }
 
 private:
 	cv::Mat image;
@@ -69,6 +69,10 @@ private:
 
 	std::vector<cv::KeyPoint> keypoints;
 	cv::Mat descriptor;
+
+	//lowerLeftX; lowerLeftY; upperRightX; upperRightY
+	std::vector<int> cropped1Coords;
+	std::vector<int> cropped2Coords;
 
 };
 
