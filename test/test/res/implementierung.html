@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>ImageHive: Implementierung</title>
+  <meta http-equiv="content-type" content="text/html; charset=windows-1252" />
+  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
+</head>
+
+<body>
+  <div id="main">
+    <div id="header">
+      <div id="logo">
+        <div id="logo_text">
+          <!-- class="logo_colour", allows you to change the colour of the text -->
+          <h1><a href="..\index.html">ImageHive </a></h1>
+          <h2>Interactive ContentAware Image Summarization</h2>
+        </div>
+      </div>
+	  <div id="group">
+			<p>Gruppe Tan2011</p>
+			<p>Rebeka Koszticsák - 1325492</p>
+			<p>Bettina Schlager - 1327281</p>
+      </div>
+      <div id="menubar">
+         <ul id="menu">
+          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+          <li><a href="..\index.html">Zusammenfassung</a></li>
+		  <li class="selected"><a href="implementierung.html">Implementierung</a></li>
+          <li ><a href="screenshots.html">Screenshots</a></li>
+		  <li><a href="ImageHive.pdf" target="_blank" >Paper</a></li>
+		  <li><a href="https://github.com/MaryAnnZ/ImageHive" target="_blank" >Source Code</a></li>
+		  
+        </ul>
+      </div>
+    </div>
+    <div id="site_content">
+      
+      <div id="content">
+       <!-- insert the page content here -->
+        <h1>VC++ Project mit OpenCV</h1>
+        <p>
+Wir planen die Applikation in C++ unter Verwendung der OpenCV 3.1 library zu schreiben. OpenCV stellt sämtliche Methoden die wir beim nachimplementieren benötigen zur Verfügung, wie die Berechnung der Histogramme und Evaluierung, oder die Generierung der Voronoi Zellen. Unter anderen wie für SIFT und Saliency Berechnung werden wir auch die contrib Libraries von OpenCV benutzen. Die Entwicklungsumgebung ist Visual Studio.
+
+Nach dem Importieren des Datensatzes werden Farb- und Kantenhistogramme erstellt und verglichen. Anhand der Evaluierung und die SIFT Feature Punkte werden die Daten zu Klassen zugeordnet, wobei der Korrelationswert zwischen je zwei Klassen je kleiner, zwischen den Bilder der einzelnen Klassen je größer sein soll. Um die Klassenbereiche auf dem Ergebnisbild zu bestimmen, wird Voronoi Tesselation ausgeführt, wobei die die Anzahl der Zellen die Anzahl der Klassen entspricht, und die Punkte so weit wie möglich vonenander platziert werden.
+
+Um die wichtigsten Bereiche in einem Bild detektieren zu können, werden entsprechende saliency Werte pro Pixel berechnet und entsprechend des BING Objectness Algorithmus werden innere und außere saliente Bereiche auf den ildern definiert. ********Die resultierende Bereiche werden aus dem Original im Graphen als Knoten gespeichert. Alle Knoten im zugehörigen Cluster werden danach mittels SIFT miteinander verglichen. Falls der Algorithmus genügend übereinstimmende Feature Points findet, werden die zwei Knoten, welche verglichen wurden, mit einer Kante verbunden. Schließlich werden die Knoten in ihrem Klassenbereich anhand der Algorithmus von Kamada und Kawai platziert.
+
+Bezüglich der lokalen Anordnung in einem Cluster: die Bilder werden so lange verschoben, dass der ganze Klassenbereich abgedeckt ist. Dazu wird Voronoi Tessellation wiederholt durchgeführt. Nach jedem Durchlauf werden die Bilder zu der Mitte ihrer Voronoizelle verschoben, wobei darauf geachtet wird dass die drei Grundsätze, wie das Freihalten der wichtigsten Bereichen pro Bild, eingehalten werden. Die Berechnung terminiert, wenn keine Bilder mehr verschoben werden müssen und alle lokalen Anforderungen bezüglich der Platzierung erfüllt sind. 
+ 
+
+		</p>
+    </div>
+	</div>
+    <div id="footer">
+      	  <p style="font-size:60%">Copyright &copy; textured_stars </p>
+	 </div>
+  
+</body>
+</html>
