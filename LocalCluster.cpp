@@ -44,8 +44,10 @@ void LocalCluster::calculateBoundingBox() {
 
 cv::Mat LocalCluster::getSaliencyCroppedImage() {
 
-	cv::Size oldSize = image.getCropped().size();
-	cv::Mat resizedImage;
+	cv::Size innerSaliency = image.getCroppedImage2().size();
+	cv::Size imageSize = image.getImage().size();
+
+	cv::Mat rescaledImage;
 
 	if (boundingHeight<=0 || boundingWidth <= 0 || boundingWidth>999 || boundingHeight>999) {
 		boundingHeight = cellHeight;
@@ -54,15 +56,16 @@ cv::Mat LocalCluster::getSaliencyCroppedImage() {
 	else {
 		float ratio;
 		if (boundingHeight >= boundingWidth) {
-			ratio = (float)boundingHeight / (float)oldSize.height;
+			ratio = (float)boundingHeight / (float)innerSaliency.height;
 
 		}
 		else {
-			ratio = (float)boundingWidth / (float)oldSize.width;
+			ratio = (float)boundingWidth / (float)innerSaliency.width;
 		}
 
-		resizedImage = image.resize(image.getCropped(), cv::Size(oldSize.width*(ratio), oldSize.height*(ratio)));
+		rescaledImage = image.resize(image.getImage(), cv::Size(imageSize.width*(ratio), imageSize.height*(ratio)));
 	}
-		return resizedImage;	
+
+	return rescaledImage;
 }
 

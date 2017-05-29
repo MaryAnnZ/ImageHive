@@ -31,9 +31,18 @@ jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point
 jcv_point recalcPoint(const jcv_point* pt, const jcv_point* min, const jcv_point* max, int width, int height);
 
 //Filling
-void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVertices, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight);
+void floodFill(Mat src, Mat out, Mat colorSrc, LocalCluster* clus);
 
 //Helper
+/**
+* TODO
+*/
 void drawBoundingBox(cv::Mat cells, Cluster* clus, Scalar col);
+/**
+* TODO
+*/
 void drawBoundingBox(cv::Mat cells, LocalCluster* Lclus, Scalar col);
+/**
+* TODO
+*/
 void draw_point(Mat&, Point2f, Scalar);

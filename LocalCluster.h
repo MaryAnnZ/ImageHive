@@ -25,9 +25,10 @@ public:
 		void calculateBoundingBox();
 		std::vector<cv::Point> boundingVertices;
 
+		ImageAttribute image;
 
 private:
-	ImageAttribute image;
+	
 
 	int boundingHeight;
 	int boundingWidth;

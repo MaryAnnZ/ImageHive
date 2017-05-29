@@ -241,6 +241,13 @@ void ImageAttribute::calculateObjectness()
 					cropped2Coords.push_back(finalLowerLeftY + cropped1Coords.at(1));
 					cropped2Coords.push_back(finalUpperRightX + cropped1Coords.at(0));
 					cropped2Coords.push_back(finalUpperRightY + cropped1Coords.at(1));
+
+					cv::circle(image, 
+						Point(
+						(std::abs(finalUpperRightX - finalLowerLeftX) /2)  + finalLowerLeftX + cropped1Coords.at(0),
+						(std::abs(finalUpperRightY - finalLowerLeftY) / 2) + finalLowerLeftY + cropped1Coords.at(1))
+						, 2, Scalar(0, 255, 0));
+
 					//cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
 					//Display
 					//cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);

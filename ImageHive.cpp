@@ -45,7 +45,7 @@ int main()
 	
 	allClusters = doLocalVoronoi(allClusters, result);
 		
-	//doGLobalVoronoiWithLocalClusters(allClusters, result);
+	doGLobalVoronoiWithLocalClusters(allClusters, result);
 
 	cvWaitKey(0);
 	return 0;
@@ -174,7 +174,6 @@ std::vector<Cluster*> createClustersAndGlobalVoronoi(std::vector<ImageAttribute>
 			}
 
 			cv::circle(cells, allGlobalClusters[clus]->pivot, 2, Scalar(255, 255, 255));
-			cv::circle(cells, allGlobalClusters[clus]->position, 4, Scalar(255, 0, 0),8);
 
 			for (int Lclus = 0;Lclus < allGlobalClusters[clus]->allLocalClusters.size();Lclus++) {
 				cv::circle(cells, cv::Point(allGlobalClusters[clus]->allLocalClusters[Lclus]->globalPivot), 4, col,3);
@@ -312,11 +311,8 @@ std::vector<Cluster*> doLocalVoronoi(std::vector<Cluster*> allclusters, ResultIm
 
 	string win_voronoi = "localVoronoi";
 
-	// allocate space for voronoi diagram
-	Mat cells = Mat::zeros(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3);
-	cells.setTo(cv::Scalar(0, 0, 255));
-
-
+	Mat cells = Mat(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3, Scalar(0, 0, 255));
+	
 	for (int clus = 0;clus < allclusters.size();clus++) {
 		std::vector<cv::Point> allpositions;
 
@@ -346,51 +342,36 @@ std::vector<Cluster*> doLocalVoronoi(std::vector<Cluster*> allclusters, ResultIm
 					cv::line(cells,
 						allclusters[clus]->allLocalClusters[Lclus]->globalPolygonEdges.at(i).first,
 						allclusters[clus]->allLocalClusters[Lclus]->globalPolygonEdges.at(i).second,
-						col, 1, 8, 0);
+						col, 3, 8, 0);
 
 				}
-
+/*
 				for (int i = 0;i < allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices.size();i++) {
 					cv::circle(cells, allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices[i], 3, Scalar(0, 255, 0));
-				}
-
-				
+				}*/
 			}
 		}
 
-		cv::Mat ouput = Mat::zeros(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3);
+		Mat ouput = Mat(globalResult.getHeight(), globalResult.getWidth(), CV_8UC3, Scalar(0, 0, 0));
 
 		for (int clus = 0;clus < allclusters.size();clus++) {
-			int localCounter = 0;
 			for (int Lclus = 0;Lclus < allclusters[clus]->allLocalClusters.size();Lclus++) {
-					cv::Mat tmp = allclusters[clus]->allLocalClusters[Lclus]->getSaliencyCroppedImage();
-					floodFill(cells, ouput,
-						tmp,
-						allclusters[clus]->allLocalClusters[Lclus]->globalPolygonVertices,
-						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.x,
-						allclusters[clus]->allLocalClusters[Lclus]->globalPivot.y,
-						tmp.size().width / 2,
-						tmp.size().height / 2,
-						tmp.size().width,
-						tmp.size().height);
+				cv::Mat tmp = allclusters[clus]->allLocalClusters[Lclus]->getSaliencyCroppedImage();
 
-					cv::circle(ouput, allclusters[clus]->allLocalClusters[Lclus]->globalPivot, 4, Scalar(0, 0, 255), 3);
-				
-				localCounter++;
+					floodFill(cells, ouput,tmp,
+						allclusters[clus]->allLocalClusters[Lclus]);
+					
 			}
-			//std::cout << clus << " cluster" << std::endl;
-			//std::cout << localCounter << " local" << std::endl;
-			//std::cout << "*******************************" << std::endl;
 		}
 
-		cv::imshow("voronoi filled", ouput);
+		cv::imshow("Local Voronoi cells filled", ouput);
 
 		voronoiEdges.clear();
 		pointMap.clear();
 		allpositions.clear();
 	}
 
-	cv::imshow("voronoi Local cells", cells);
+	cv::imshow("Local Voronoi cells", cells);
 	cv::waitKey(0);
 
 	return allclusters;
@@ -461,7 +442,7 @@ void calculateLocalVoronoiEdges(Cluster* clus, std::vector<cv::Point> all, std::
 		}
 
 		
-		clusterMapping.at(i)->globalPivot = cv::Point(site->p.x + offsetPosition.x, site->p.y + offsetPosition.y);
+		clusterMapping.at(i)->globalPivot = cv::Point(points[i].x + offsetPosition.x, points[i].y + offsetPosition.y);
 		clusterMapping.at(i)->calculateBoundingBox();
 	}
 	
@@ -610,13 +591,8 @@ void calcGLobalWithLocalVoronoi(std::vector<cv::Point> all, std::vector<LocalClu
 
 
 		cv::Mat tmp = map[i]->getImage();
-		floodFill(boundarySrc, output, tmp, polygonVertices,
-			points[i].x,
-			points[i].y,
-			tmp.size().width / 2,
-			tmp.size().height / 2,
-			tmp.size().width,
-			tmp.size().height);
+
+		floodFill(boundarySrc, output, tmp, map[i]);
 
 		cv::circle(boundarySrc, cv::Point(points[i].x, points[i].y),3 , Scalar(0, 0, 0), 3, 8, 0);
 
@@ -682,20 +658,16 @@ void relax_points(const jcv_diagram* diagram, jcv_point* points)
 }
 
 
-void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVertices, int pointx, int pointy, int srcX, int srcY, int srcWidth, int srcHeight) {
+void floodFill(Mat src, Mat out, Mat colorSrc,LocalCluster* clus) {
 
-	IntersectionHelper helper;
+	cv::Mat innerSal = clus->image.getCroppedImage2();
+	std::vector<int> innerSaliencyVertices = clus->image.getCropped2Coords();
 
-	std::vector<float> polyX;
-	std::vector<float> polyY;
-	for each (cv::Point p in polygonVertices) {
-		polyX.push_back(p.x);
-		polyY.push_back(p.y);
-	}
-
+	int pivotX = (innerSal.size().width / 2) + innerSaliencyVertices[0];
+	int pivotY = (innerSal.size().height / 2) + innerSaliencyVertices[1];
 
 	std::stack<std::pair<cv::Point, cv::Point>> stack;
-	stack.push(std::pair<cv::Point, cv::Point>(Point(pointx, pointy), Point(srcX, srcY)));
+	stack.push(std::pair<cv::Point, cv::Point>(Point(clus->globalPivot.x, clus->globalPivot.x), Point(pivotX, pivotY)));
 	
 	int counter = 0;
 	int newPointX = 0;
@@ -703,7 +675,7 @@ void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVer
 	int newsrcX = 0;
 	int newsrcY = 0;
 
-	while (!stack.empty() && counter < 900000) {
+	while (!stack.empty()) {
 		newPointX = stack.top().first.x;
 		newPointy = stack.top().first.y;
 		newsrcX = stack.top().second.x;
@@ -714,27 +686,19 @@ void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVer
 		if (newPointX > 1 && newPointy > 1 &&
 			newPointy < (RESULT_HEIGHT - 1) && newPointX < (RESULT_WIDTH - 1) &&
 			newsrcX > 1 && newsrcY > 1 &&
-			newsrcY < (srcHeight - 1) && newsrcX < (srcWidth - 1))
+			newsrcY < (src.size().height - 1) && newsrcX < (src.size().width - 1))
 			 {
-			if (src.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255) &&
-				out.at<Vec3b>(newPointy, newPointX) == Vec3b(1, 2, 0)) {
 
-				Vec3b newIntensity = colorSrc.at<Vec3b>(newsrcY, newsrcX);
+			if (out.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 0) &&
+				src.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255)) {
 
-				if (helper.pointInPolygon(polygonVertices.size(), polyX, polyY, (float)newPointX, (float)newPointy)) {
-					out.at<Vec3b>(newPointy, newPointX) = newIntensity;
+				if (newsrcX == pivotX && pivotY == newsrcY) {
+					out.at<Vec3b>(newPointy, newPointX) = Vec3b(255, 0, 0);
 				}
 				else {
-					int first = (newIntensity.val[0] + out.at<Vec3b>(newPointy, newPointX).val[0])/2;
-					int second = (newIntensity.val[1] + out.at<Vec3b>(newPointy, newPointX).val[1])/2;
-					int third = (newIntensity.val[2] + out.at<Vec3b>(newPointy, newPointX).val[2])/2;
-
-					out.at<Vec3b>(newPointy, newPointX) = Vec3b(first, second, third);
+					out.at<Vec3b>(newPointy, newPointX) = colorSrc.at<Vec3b>(newsrcY, newsrcX);
 				}
-
-
-				src.at<Vec3b>(newPointy, newPointX) = Vec3b(0, 255, 0);
-
+				
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX + 1, newPointy), Point(newsrcX + 1, newsrcY)));
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX - 1, newPointy), Point(newsrcX - 1, newsrcY)));
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX, newPointy - 1), Point(newsrcX, newsrcY - 1)));
@@ -742,7 +706,6 @@ void floodFill(Mat src, Mat out, Mat colorSrc, std::vector<cv::Point> polygonVer
 				}
 			}
 		}
-
 
 }
 
