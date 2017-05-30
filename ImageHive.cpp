@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	//init all images array
 	allImages = std::vector<ImageAttribute>(rawImages.size());
 	cout << "************************************************************************************************** \n";
-	cout << "Analyzing Images are analyzed.. \n";
+	cout << "Analyzing Images.. \n";
 	doSimilarityCalculation(rawImages,filePaths);
 
 	cout << "************************************************************************************************** \n";
@@ -126,7 +126,6 @@ int main(int argc, char** argv)
 				break;
 			}
 			
-
 		}
 
 		return 0;
@@ -134,7 +133,6 @@ int main(int argc, char** argv)
 }
 
 //UI
-
 Cluster* getTouchedCluster(int x, int y) {
 
 	Vec3b color = clusterIndex.at<Vec3b>(y, x);

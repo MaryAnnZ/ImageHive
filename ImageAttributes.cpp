@@ -127,8 +127,14 @@ void ImageAttribute::calculateObjectness()
 			return;
 		}
 
-		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath("C:/ObjectnessTrainedModel");
-		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
+		char result[MAX_PATH];
+		std::string tmp = std::string(result, GetModuleFileName(NULL, result, MAX_PATH));
+
+		tmp = tmp.substr(0, tmp.length() - 13);
+
+
+		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setTrainingPath(tmp+"/data/ObjectnessTrainedModel");
+		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir(tmp + "/data/ObjectnessTrainedModel/Results");
 
 		if (saliencyAlgorithmBing->computeSaliency(imageToProc, objectnessBoundingBox)) {
 			//std::cout << "Objectness done" << std::endl;

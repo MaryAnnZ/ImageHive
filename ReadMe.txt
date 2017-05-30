@@ -1,40 +1,14 @@
-========================================================================
-    CONSOLE APPLICATION : ImageHive Project Overview
-========================================================================
+Allgemein
 
-AppWizard has created this ImageHive application for you.
+Die Applikation ist in C++ unter Verwendung der OpenCV 3.1 library geschrieben. OpenCV stellt sämtliche Methoden die wir beim nachimplementieren benötigen zur Verfügung, wie die Berechnung der Histogramme und Evaluierung.Unter anderen wie für SIFT und Saliency Berechnung werden wir auch die contrib Libraries von OpenCV benutzen. Die Entwicklungsumgebung ist Visual Studio 2015.
+Datensatz
 
-This file contains a summary of what you will find in each of the files that
-make up your ImageHive application.
+Bezüglich Inputdaten haben wir uns entschieden natürliche Bilder zu verwenden, da sich diese besser für die Ähnlichkeitsberechnung eignen. Zurzeit unterstützt unsere Implementierung ein maximum von 20 Inputbildern.
+Implementierung
 
+Nach dem Importieren des Datensatzes werden Farb- und Kantenhistogramme erstellt und verglichen. Anhand der Evaluierung und die SIFT Feature Punkte werden die Daten zu Klassen zugeordnet, wobei der Korrelationswert zwischen je zwei Klassen je kleiner, zwischen den Bilder der einzelnen Klassen je größer sein soll. Um die Klassenbereiche auf dem Ergebnisbild zu bestimmen, wird Voronoi Tesselation ausgeführt, wobei die die Anzahl der Zellen die Anzahl der Klassen entspricht, und die Punkte so weit wie möglich vonenander platziert werden. Um die wichtigsten Bereiche in einem Bild detektieren zu können, werden entsprechende saliency Werte pro Pixel berechnet und entsprechend des BING Objectness Algorithmus werden innere und außere saliente Bereiche auf den ildern definiert.
 
-ImageHive.vcxproj
-    This is the main project file for VC++ projects generated using an Application Wizard.
-    It contains information about the version of Visual C++ that generated the file, and
-    information about the platforms, configurations, and project features selected with the
-    Application Wizard.
+Nach der Ähnlichkeitsberechnung und dem Clustering werden die globalen Cluster grob im 2D Raum angeordnet, und danach werden die Clustergrenzen mittels Voronoi Tessellation ermittelt. Diese globalen Grenzen helfen beim Lokalen Clustering und Verschiebung der Lokalen Mittelpunkte damit die Punkte gut verteilt sind. Nach der lokalen Platzierung werden mittels FloodFill die einzelnen Clusterzellen mit deren Bildern gefüllt. Der Seedpunkt des Bildes ist der Mittelpunkt des inneren lokalen Saliency Bereich, welcher die Mitte des wichtigsten Bereiches im Bild darstellen soll. Das Bild nach dem äußeren Saliency Bereich skaliert um sicher zustellen dass der innere Bereich sichtbar ist.
+Interaktion
 
-ImageHive.vcxproj.filters
-    This is the filters file for VC++ projects generated using an Application Wizard. 
-    It contains information about the association between the files in your project 
-    and the filters. This association is used in the IDE to show grouping of files with
-    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
-    "Source Files" filter).
-
-ImageHive.cpp
-    This is the main application source file.
-
-/////////////////////////////////////////////////////////////////////////////
-Other standard files:
-
-StdAfx.h, StdAfx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named ImageHive.pch and a precompiled types file named StdAfx.obj.
-
-/////////////////////////////////////////////////////////////////////////////
-Other notes:
-
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
-
-/////////////////////////////////////////////////////////////////////////////
+Nach dem Start kann der Benutzer die gewünschte Fenstergröße eingeben. Danach wird ein Ordner ausgewählt welcher die Bilder beinhaltet welche sortiert werden sollen. Nach einer kurzen Wartezeit sieht man auch schon das Ergebnis. Es gibt nun zwei Modi, beim ersten kann man beim Klick auf ein globales Cluster das kleine Cluster nochmal größer betrachten mit eingezeichneten Saliency Bereich. Beim zweiten Modus sieht man beim Klick auf ein globales Cluster die Centroidal Voronoi Tessellation welche durchgeführt wurde.
