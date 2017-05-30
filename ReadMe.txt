@@ -12,3 +12,25 @@ Nach der Ähnlichkeitsberechnung und dem Clustering werden die globalen Cluster g
 Interaktion
 
 Nach dem Start kann der Benutzer die gewünschte Fenstergröße eingeben. Danach wird ein Ordner ausgewählt welcher die Bilder beinhaltet welche sortiert werden sollen. Nach einer kurzen Wartezeit sieht man auch schon das Ergebnis. Es gibt nun zwei Modi, beim ersten kann man beim Klick auf ein globales Cluster das kleine Cluster nochmal größer betrachten mit eingezeichneten Saliency Bereich. Beim zweiten Modus sieht man beim Klick auf ein globales Cluster die Centroidal Voronoi Tessellation welche durchgeführt wurde.
+
+***********************************************************
+Start the program by starting "ImageHive.exe"
+
+In the "data" folder you can find several test data.
+With some datasets the algorithm works better than others concerning clustering to 
+similarity. data images as in the directory "unnatural" does not work very well with
+similarity calculation than eg. natural datasets as "vacation"
+
+
+If you want to try it with your own dataset keep in mind:
+* .png are prefered 
+* concerning calculation time: use small input images (no more than 250KB per image)
+* right now more than 25 is not supported - at your own risk! :)
+
+
+After start you can take a look at local clusters by clicking on them, and also 
+can see saliency regions with "c" and click on the cluster.
+
+Keep in mind to NOT close the big image, since it is not working probably after!
+
+Have fun
