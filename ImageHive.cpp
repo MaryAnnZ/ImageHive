@@ -707,6 +707,8 @@ void floodFillColor(Mat boundries, Mat out, int colorIndex, cv::Point seed) {
 
 void localFloodFill(Mat boundries, Mat out, Mat colorSrc, LocalCluster* Lclus, float scaleRatio, cv::Point offsetPosition) {
 
+	Mat locical = boundries.clone();
+
 	cv::Mat innerSal = Lclus->image.getCroppedImage2();
 	std::vector<int> innerSaliencyVertices = Lclus->image.getCropped2Coords();
 
@@ -740,8 +742,10 @@ void localFloodFill(Mat boundries, Mat out, Mat colorSrc, LocalCluster* Lclus, f
 				//out of bounds  src image
 
 				if (out.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 0) &&
-					boundries.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255)) {
+					boundries.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255) && 
+					locical.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255)) {
 
+					locical.at<Vec3b>(newPointy, newPointX) = Vec3b(255, 255, 255);
 					out.at<Vec3b>(newPointy, newPointX) = colorSrc.at<Vec3b>(newsrcY, newsrcX);
 					stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX + 1, newPointy), Point(newsrcX + 1, newsrcY)));
 					stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX - 1, newPointy), Point(newsrcX - 1, newsrcY)));
@@ -758,6 +762,8 @@ void localFloodFill(Mat boundries, Mat out, Mat colorSrc, LocalCluster* Lclus, f
 }
 
 void cellFloodFill(Mat boundries, Mat out, Mat colorSrc,LocalCluster* clus, float scaleRatio) {
+
+	Mat locical = boundries.clone();
 
 	cv::Mat innerSal = clus->image.getCroppedImage2();
 	std::vector<int> innerSaliencyVertices = clus->image.getCropped2Coords();
@@ -789,15 +795,13 @@ void cellFloodFill(Mat boundries, Mat out, Mat colorSrc,LocalCluster* clus, floa
 			 {
 
 			if (out.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 0) &&
-				boundries.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255)) {
+				boundries.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255) && 
+				locical.at<Vec3b>(newPointy, newPointX) == Vec3b(0, 0, 255)) {
 
-				if (newsrcX == pivotX && pivotY == newsrcY) {
-					out.at<Vec3b>(newPointy, newPointX) = Vec3b(255, 0, 0);
-				}
-				else {
-					out.at<Vec3b>(newPointy, newPointX) = colorSrc.at<Vec3b>(newsrcY, newsrcX);
-				}
-				
+				locical.at<Vec3b>(newPointy, newPointX) = Vec3b(255, 255, 255);
+
+				out.at<Vec3b>(newPointy, newPointX) = colorSrc.at<Vec3b>(newsrcY, newsrcX);
+
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX + 1, newPointy), Point(newsrcX + 1, newsrcY)));
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX - 1, newPointy), Point(newsrcX - 1, newsrcY)));
 				stack.push(std::pair<cv::Point, cv::Point>(Point(newPointX, newPointy - 1), Point(newsrcX, newsrcY - 1)));
