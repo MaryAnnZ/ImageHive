@@ -27,9 +27,6 @@
     <ClCompile Include="Cluster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ResultImage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DataLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,7 +39,7 @@
     <ClCompile Include="LocalCluster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IntersectionHelper.cpp">
+    <ClCompile Include="Helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,9 +54,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cluster.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResultImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DataLoader.h">
@@ -80,7 +74,7 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IntersectionHelper.h">
+    <ClInclude Include="Helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

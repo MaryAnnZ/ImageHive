@@ -5,27 +5,27 @@ class DataLoader
 {
 public:
 	/**
-	*Lädt die Bilder in einem Ordner
+	*Laedt die Bilder in einem Ordner
 	*/
 	DataLoader();
 	~DataLoader();
 	/**
-	*Gibt die Pfade zu dem geladenen Bilder zurück
+	*Gibt die Pfade zu dem geladenen Bilder zurueck
+	@return Pfad zum geladenen Bild
 	*/
 	std::vector<cv::String> getFilePaths() { return filePaths; };
 	/**
-	*Lädt die Bilder
+	*Laedt die Bilder
+	@return Referenz zu allen geladenen Bildern
 	*/
 	std::vector<cv::Mat> DataLoader::loadDataset();
 
 private:
 	/**
-	*Öffnet ein Windows File Browser
+	*oeffnet ein Windows File Browser
 	*/
 	std::string DataLoader::browseFolder();
-	/**
-	*die Pfade zu dem geladenen Bilder
-	*/
-	std::vector<cv::String> filePaths;
+
+	std::vector<cv::String> filePaths;					///<die Pfade zu dem geladenen Bilder
 };
 

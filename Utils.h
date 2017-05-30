@@ -8,6 +8,7 @@
 #include <opencv2\imgproc\imgproc.hpp>
 #include "opencv2\videoio.hpp"
 #include "opencv2\imgcodecs.hpp"
+#include "opencv2\imgproc.hpp"
 #include <Windows.h>
 #include <shlobj.h>
 #include <cstdio>
@@ -15,5 +16,4 @@
 #include <map>
 #include <stack>
 
-const int RESULT_HEIGHT = 600;
-const int RESULT_WIDTH = 900;
+

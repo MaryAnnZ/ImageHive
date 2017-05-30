@@ -14,32 +14,8 @@ using namespace saliency;
 ImageAttribute::ImageAttribute(cv::Mat img, int idVal, std::string path)
 {
 	image = img;
-	resizedImage = image.clone();
 	id = idVal;
 	filePath = path;
-}
-
-ImageAttribute::ImageAttribute()
-{
-}
-
-ImageAttribute::~ImageAttribute()
-{
-}
-
-cv::Mat ImageAttribute::resize(cv::Size newSize)
-{
-	cv::Mat tmp = image;
-	cv::resize(image, resizedImage, newSize);
-	return resizedImage;
-}
-
-cv::Mat ImageAttribute::resize(cv::Mat image, cv::Size newsize) {
-
-	cv::Mat newImage;
-	cv::resize(image, newImage, newsize);
-	return newImage;
-
 }
 
 void ImageAttribute::calcColorHistogram()
@@ -155,7 +131,7 @@ void ImageAttribute::calculateObjectness()
 		saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->setBBResDir("C:/ObjectnessTrainedModel/Results");
 
 		if (saliencyAlgorithmBing->computeSaliency(imageToProc, objectnessBoundingBox)) {
-			std::cout << "Objectness done" << std::endl;
+			//std::cout << "Objectness done" << std::endl;
 			objectnessValue = saliencyAlgorithmBing.dynamicCast<cv::saliency::ObjectnessBING>()->getobjectnessValues();
 
 			if (objectnessBoundingBox.size() > 0 && objectnessValue.size() > 0) {
@@ -217,6 +193,8 @@ void ImageAttribute::calculateObjectness()
 				if (finalUpperRightY > imageToProc.rows) {
 					finalUpperRightY = imageToProc.rows;
 				}
+				saliencyMarkedImage = image.clone();
+
 				//std::cout << finalLowerLeftX << "; " << finalLowerLeftY << "; " << finalUpperRightX << "; " << finalUpperRightY  << " image: " << image.cols << "X" << image.rows << std::endl;
 				if (firstLoop) {
 					croppedImage = imageToProc.clone();
@@ -226,7 +204,8 @@ void ImageAttribute::calculateObjectness()
 					cropped1Coords.push_back(finalLowerLeftY);
 					cropped1Coords.push_back(finalUpperRightX);
 					cropped1Coords.push_back(finalUpperRightY);
-					//cv::rectangle(imageToProc, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+
+					cv::rectangle(saliencyMarkedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 2);
 					//Display
 					/*cv::namedWindow(filePath + "BING", CV_WINDOW_AUTOSIZE);
 					cv::imshow(filePath + "BING", clone);
@@ -241,14 +220,9 @@ void ImageAttribute::calculateObjectness()
 					cropped2Coords.push_back(finalLowerLeftY + cropped1Coords.at(1));
 					cropped2Coords.push_back(finalUpperRightX + cropped1Coords.at(0));
 					cropped2Coords.push_back(finalUpperRightY + cropped1Coords.at(1));
+					
 
-					cv::circle(image, 
-						Point(
-						(std::abs(finalUpperRightX - finalLowerLeftX) /2)  + finalLowerLeftX + cropped1Coords.at(0),
-						(std::abs(finalUpperRightY - finalLowerLeftY) / 2) + finalLowerLeftY + cropped1Coords.at(1))
-						, 2, Scalar(0, 255, 0));
-
-					//cv::rectangle(croppedImage, cv::Point(finalLowerLeftX, finalLowerLeftY), cv::Point(finalUpperRightX, finalUpperRightY), cv::Scalar(0, 0, 255), 4);
+					cv::rectangle(saliencyMarkedImage, cv::Point(finalLowerLeftX + cropped1Coords.at(0), finalLowerLeftY+ cropped1Coords.at(1)), cv::Point(finalUpperRightX + cropped1Coords.at(0), finalUpperRightY + cropped1Coords.at(1)), cv::Scalar(0, 0, 255), 1);
 					//Display
 					//cv::namedWindow(filePath + "BING2", CV_WINDOW_AUTOSIZE);
 					//cv::imshow(filePath + "BING2", clone);
@@ -297,6 +271,7 @@ void ImageAttribute::outputHistogram()
 	//cv::namedWindow("calcHist", CV_WINDOW_AUTOSIZE);
 	//cv::imshow("calcHist", histImage);
 }
+
 
 int ImageAttribute::getVariance(std::vector<int> values)
 {

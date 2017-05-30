@@ -30,7 +30,7 @@ void MyGraph::buildGraph(std::vector<ImageAttribute> all) {
 				}
 			
 		}
-		std::cout << "comparing " << all.at(i).getPath() << std::endl;
+		//std::cout << "comparing " << all.at(i).getPath() << std::endl;
 		for (int k = 0; k < histCorr.size(); k++) {
 			//normalize HOG
 
@@ -40,11 +40,11 @@ void MyGraph::buildGraph(std::vector<ImageAttribute> all) {
 			if (i != k) { //no edges with the same start and end vertex
 				//createEdge(all.at(i), all.at(k), siftValue);
 				createEdge(all.at(i), all.at(k), hogValue + histCorr.at(k) + siftValue); //if weight==3 no corr, weight == 0 is the same
-				std::cout << " with " << all.at(k).getPath() << std::endl;
-				std::cout << "value: " << hogValue + histCorr.at(k)  + siftValue<< std::endl;
+				//std::cout << " with " << all.at(k).getPath() << std::endl;
+				//std::cout << "value: " << hogValue + histCorr.at(k)  + siftValue<< std::endl;
 			}
 		}
-		std::cout << "*****************" << std::endl;
+		//std::cout << "*****************" << std::endl;
 	}
 
 }
@@ -153,7 +153,7 @@ void MyGraph::compareSiftForNeighborhood()
 			int bestMatches = -1;
 			int bestMatchIndex = -1;
 			for (int j = 0; j < it->second.size(); j++) {
-				std::cout << "size: " << it->second.size() << ", index: " << j << std::endl;
+				//std::cout << "size: " << it->second.size() << ", index: " << j << std::endl;
 				if (i != j) {
 					flannMatcher.match(it->second[i].img.getDescriptor(), it->second[i].img.getDescriptor(), matches);
 					//-- Quick calculation of max and min distances between keypoints
@@ -174,7 +174,7 @@ void MyGraph::compareSiftForNeighborhood()
 							goodMatchCounter++;
 						}
 					}
-					std::cout << "good match counter: " << goodMatchCounter << std::endl;
+					//std::cout << "good match counter: " << goodMatchCounter << std::endl;
 					if (goodMatchCounter > bestMatches) {
 						bestMatches = goodMatchCounter;
 						bestMatchIndex = j;
@@ -183,7 +183,7 @@ void MyGraph::compareSiftForNeighborhood()
 					matches.clear();
 				}
 			}
-			std::cout << bestMatchIndex << std::endl;
+			//std::cout << bestMatchIndex << std::endl;
 			it->second.at(i).neighborImg = it->second.at(bestMatchIndex).img;
 			bestMatchIndex = -1;
 		}

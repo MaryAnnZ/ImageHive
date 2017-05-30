@@ -34,6 +34,5 @@ bool MyEdge::connectedWith(MyEdge otherEdge)
 void MyEdge::addNedigbor(MyEdge edge)
 {
 	neighbors.push_back(edge);
-	std::cout << "Edge: " << weight << " is neighboring " << edge.getWeight() << std::endl;
 }
 

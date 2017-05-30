@@ -1,4 +1,5 @@
 #include "LocalCluster.h"
+#include "Helper.h"
 
 LocalCluster::LocalCluster(ImageAttribute img, cv::Point globalPivot_, int height, int width, cv::Point pos)
 {
@@ -42,9 +43,16 @@ void LocalCluster::calculateBoundingBox() {
 
 
 
-cv::Mat LocalCluster::getSaliencyCroppedImage() {
+cv::Mat LocalCluster::getSaliencyCroppedImage(int mode) {
 
-	cv::Size innerSaliency = image.getCroppedImage2().size();
+	Helper helper = Helper();
+
+	//if mode == 0 then less saliency constraint, if mode == 1 more saliency constraint!
+
+	int outerSaliencyHeight = image.getCropped().rows;
+	int outerSaliencyWidth = image.getCropped().cols;
+
+
 	cv::Size imageSize = image.getImage().size();
 
 	cv::Mat rescaledImage;
@@ -53,18 +61,35 @@ cv::Mat LocalCluster::getSaliencyCroppedImage() {
 		boundingHeight = cellHeight;
 		boundingWidth = cellWidth;
 	}
-	else {
-		float ratio;
-		if (boundingHeight >= boundingWidth) {
-			ratio = (float)boundingHeight / (float)innerSaliency.height;
-
+	
+	float ratio;
+	if (boundingHeight >= boundingWidth) {
+		if (mode == 1) {
+			ratio = (float)boundingWidth / (float)outerSaliencyWidth;
 		}
 		else {
-			ratio = (float)boundingWidth / (float)innerSaliency.width;
+			ratio = (float)boundingHeight / (float)outerSaliencyHeight;
 		}
 
-		rescaledImage = image.resize(image.getImage(), cv::Size(imageSize.width*(ratio), imageSize.height*(ratio)));
 	}
+	else {
+		if (mode == 1) {
+			ratio = (float)boundingHeight / (float)outerSaliencyHeight;
+		}
+		else {
+			ratio = (float)boundingWidth / (float)outerSaliencyWidth;
+		}
+	}
+
+	if (mode == 0) {
+		rescaledImage = helper.resize(image.getImage(), cv::Size(imageSize.width*(ratio), imageSize.height*(ratio)));
+	}
+	else {
+		rescaledImage = helper.resize(image.getSaliencyMarkedOriginal(), cv::Size(imageSize.width*(ratio), imageSize.height*(ratio)));
+	}
+	
+
+	lastScalingRatio = ratio;
 
 	return rescaledImage;
 }
